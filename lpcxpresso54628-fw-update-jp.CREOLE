@@ -1,0 +1,40 @@
+<<info>>
+このページはまだ書きかけです～
+<</info>>
+
+<<info>>
+LPCXpresso54628をmbed化する際にハマった．数か月前に1度やって再度試みたら同じところで躓いた．なのでこれは自分用のメモとして書いておく
+<</info>>
+{{/media/uploads/okano/img_7045_3_-1-.jpg}}
+
+===わかりにくい===
+LPCXpresso54628はmbedとして使えるようになっているのだけど，まずはデバッグインターフェース部のマイコン(LPC4322)のファームウェアを書き換えないと「ドラッグ＆ドロップ書き込み」ができるようにならない．\\
+しかもこの手順は2段階に分かれていて，さらに書き込むファイルの場所がよく分からなかったりする．\\
+ほんとうはそれを解説した[[https://os.mbed.com/teams/NXP/wiki/Updating-LPCXpresso-firmware|こちらのページ]]がアップデートされてもっと親切なガイドにするべきだけど，とりあえず未来の自分が迷子にならないように書いておく．
+
+===必要なもの===
+* LPCXpresso54628（同類のLPCXpresso546xxも多分手順は同じ(未確認)）
+* [[https://www.nxp.com/lpcscrypt|lpcscrypt]]をインストールしたPCまたはMac（以下PC）\\
+
+===手順===
+* LPCXpresso54628基板のJP5「DFU LINK」をジャンパピンでショート
+* J8「Debug Link」コネクタとPCをケーブルでつなぐ
+* lpcscryptがインストールされたフォルダ（たとえばMacなら「/Applications/lpcscrypt_2.1.0_842/」のような感じで入ってる）の下のscriptsフォルダに入っている「program_CMSIS」コマンドを実行して最初のファイルを書き込みます
+* この「最初に書き込むファイル」は[[https://os.mbed.com/teams/NXP/wiki/Updating-LPCXpresso-firmware#binary-downloads|このリスト]]の中の**『Link2 (LPC432x) Bootloader binary』**です ←これになかなか気が付かない (ToT)
+* 『Bootloader binary for LPC4322』としてリンクされてるファイルをPCにダウンロードしておきます
+* ターミナルで以下のようにして実行(書き込むファイルは「ダウンロード・フォルダ」に保存した状態です)
+<<code>>
+program_CMSIS ~/Downloads/lpc4322_bl_crc.bin
+<</code>>
+* 画面の指示にしたがってキーを押せば書き込みが完了
+* LPCXpresso54628基板のJP5「DFU LINK」に取り付けてあったジャンパピンを外す
+* J8「Debug Link」コネクタのUSBケーブルを一旦取り外して再接続
+* そうするとLPCXpresso54628は『MAINTENANCE』という名前のストレージ・ドライブとしてPC上に現れる
+* このMAINTENANCEドライブにもう一つのファイルをダウンロードする．このファイルは現在，[[https://armmbed.github.io/DAPLink/|このページ]]の検索フォームに「546」と打つと出てくる候補「LPCXpresso54608」を選択すると
+* 「FIRMWARE FILE: 0253_LPC4322_LPC54608XPRESSO_0X10000.BIN」が出てくるのでこの*「0253_LPC4322_LPC54608XPRESSO_0X10000.BIN」*をダウンロード．
+* これをさきほどのMAINTENANCEにドラッグ・アンド・ドロップで書き込む
+{{/media/uploads/okano/---------_2019-03-12_15.53.31.png}}
+{{/media/uploads/okano/---------_2019-03-12_15.53.44.png}}
+
+
+https://os.mbed.com/teams/NXP/wiki/Updating-LPCXpresso-firmware

@@ -1,0 +1,73 @@
+=yottaつまづきメモ=
+
+mbedからリリースされる新しいツール「yotta」．これがいまひとつ，どんなものか分からん．\\
+「まぁとにかくイジってみないとな」と思ってインストールし始めたら..\\
+このページは，そこから始まるメモです．
+
+<<info title="ココに書くべきだった？">>
+こういう内容は [[mbed.com]] に新しくできたフォーラムの[[http://forums.mbed.com/t/getting-started-with-yotta/|この辺り]]で報告するべきかと思ったけど，現在まだβ版ということもあるし，なんかスレッドを汚すのも気がひけるのでココに書く．
+<</info>>
+
+きっかけは[[https://twitter.com/toyowata/status/640735365876219904|このツイート]]だった．mbedサイトがまるっきり新しくなってる感じ．これまで新オフラインツールについては，インストールガイドなども全てgithubにあったのが，こちらでも公開されている．\\
+これを見つけたのは雨の早朝．雨の止んだタイミングで出勤しようと，レーダーで雲の動きを監視しつつ，少し作業を始めた．
+
+----
+
+最初のページからDeveloperのリンクを辿って[[https://docs.mbed.org/docs/getting-started-mbed-os/en/latest/FirstProjectmbedOS/]]まで．\\
+そしてこのページからさらに[[http://yottadocs.mbed.com]]へ．\\
+
+「Installing On OS X」に従って作業をすすめる．\\
+HomeBrewはこれまでも使っていたので，そのまま\\
+
+##brew tap ARMmbed/homebrew-formulae##\\
+
+##brew install python cmake ninja arm-none-eabi-gcc##\\
+
+までやる．問題なし．\\
+次の\\
+
+##pip install yotta##\\
+
+を実行しようとするも，「pip」が無いという．調べてみるとそれがインストールされてない．\\
+
+##easy_install pip##\\
+
+すればいいという．コマンドを打ってみるとエラー．ディレクトリの権限がないとのことで，これを変更した．\\
+
+ちゃんとメモしてなかったので(コマンドのヒストリが残ってると信じてたのに，消えている orz )，ちょっとあやふやだけど確か「sudo chmod -R 777 /Library/Python/2.7/site-packages/」のようにした．ちょっと無理矢理だけど (^ ^;\\
+
+----
+
+改めて
+
+##pip install yotta##
+
+を実行．しかしエラーが出る．念のために「Solving Common OS X installation problems」に書かれてある
+
+##ARCHFLAGS=-Wno-error=unused-command-line-argument-hard-error-in-future pip install yotta##
+
+も試してみるがダメ．
+出てくるエラーメッセージはこんな感じ
+
+<<code>>
+alice:~/yotta_test $ ARCHFLAGS=-Wno-error=unused-command-line-argument-hard-error-in-future pip install yotta
+<</code>>
+↑実行したコマンド(bashで実行する必要がある)\\
+↓結果
+<<code>>
+.............
+........
+..........
+Installing collected packages: hidapi, pyOCD, argparse, xmltodict, project-generator, valinor, yotta
+  Running setup.py install for hidapi
+    Complete output from command /usr/bin/python -c "import setuptools, tokenize;__file__='/private/var/folders/9w/pp_f0_w88xjg690059bpkjx00000gq/T/pip-build-QMJ3r1/hidapi/setup.py';exec(compile(getattr(tokenize, 'open', open)(__file__).read().replace('\r\n', '\n'), __file__, 'exec'))" install --record /var/folders/9w/pp_f0_w88xjg690059bpkjx00000gq/T/pip-4By5ON-record/install-record.txt --single-version-externally-managed --compile:
+    running install
+    running build
+    running build_ext
+    building 'hid' extension
+    error: unknown file type '.pxd' (from 'chid.pxd')
+    
+    ----------------------------------------
+Command "/usr/bin/python -c "import setuptools, tokenize;__file__='/private/var/folders/9w/pp_f0_w88xjg690059bpkjx00000gq/T/pip-build-QMJ3r1/hidapi/setup.py';exec(compile(getattr(tokenize, 'open', open)(__file__).read().replace('\r\n', '\n'), __file__, 'exec'))" install --record /var/folders/9w/pp_f0_w88xjg690059bpkjx00000gq/T/pip-4By5ON-record/install-record.txt --single-version-externally-managed --compile" failed with error code 1 in /private/var/folders/9w/pp_f0_w88xjg690059bpkjx00000gq/T/pip-build-QMJ3r1/hidapi
+alice:~/yotta_test $ 
+<</code>>

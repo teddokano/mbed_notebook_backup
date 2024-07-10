@@ -1,0 +1,20 @@
+2014年11月7日に東京巣鴨のCQ出版で行われた[[https://atnd.org/events/57766|『トラ技_mbedライブラリの作成方法の勉強会』]]の資料．\\
+実際の手順に沿って作成から公開，コンポーネント登録を解説．\\
+また「参考」欄では，考慮すべきポイントなどを記載．\\
+
+* 発表者ノート付のファイルは何故か横向きにしかPDFにプリントできなくて，少し見にくいフォーマットになってしまっています (^ ^;
+* version 1.1 以降の変更点は，最後のスライドを参照してください
+
+
+最新：\\
+* version 1.1 (11月8日)\\
+** [[/media/uploads/okano/mbed_library_study_meeting_v1.1.pdf|プレゼンテーションスライド (17.4MB, pdf)]]\\
+** [[/media/uploads/okano/mbed_library_study_meeting_v1.1_w_note.pdf|プレゼンテーションスライド -発表者ノート付- (8.5MB, pdf)]] \\
+
+古いバージョン：\\
+* version 1.0 (11月7日)\\
+** [[/media/uploads/okano/mbed_library_study_meeting_v1.0.pdf|プレゼンテーションスライド (15.8MB, pdf)]]\\
+** [[/media/uploads/okano/mbed_library_study_meeting_v1.0_w_note.pdf|プレゼンテーションスライド -発表者ノート付- (7.7MB, pdf)]] \\
+
+* プレビュー版(11月6日)\\
+** [[/media/uploads/okano/mbed_library_study_meeting_v0.1.pdf|プレゼンテーションスライド (15.3MB, pdf)]]  

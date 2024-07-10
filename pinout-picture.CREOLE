@@ -1,0 +1,56 @@
+= LPC1114 pinout pictures =
+
+<<info>>
+The mbed-SDK for LPC1114 ([[http://mbed.org/platforms/LPC1114FN28/]]) supports 2 types of boards and DIP28 package pinouts. 
+These picture shows the pin names and available functions on those boards and chip. 
+<</info>>
+
+<<info>>
+User guide (English) page is available in next URL [[http://mbed.org/users/ytsuboi/notebook/getting-started-with-mbed-lpc1114/]].
+
+mbedコンパイラによるLPC1114の使い方については，つぼいさんによる解説：
+[[http://mbed.org/users/ytsuboi/notebook/getting-started-with-mbed-lpc1114-ja/ | 『[lang:ja] mbed LPC1114での遊び方』]]を御覧ください．
+<</info>>
+
+<<info>>
+Feel free to use these pictures/files ;) 
+<</info>>
+
+
+== CQ board ==
+2013-Sep-09 version : 
+* PWM label removed from some pins (those can not be used for PWM)
+
+{{/media/uploads/okano/pinout_cq-20130909-.png}}
+
+Picture with detailed pin name is available here:\\
+[[/media/uploads/okano/pinout_cq_detail-20130909-.png]]
+
+== DIP28 ==
+2015-Apr-17 version : 
+* dp23 as "reset only" pin
+
+{{/media/uploads/okano/pinout_dip28-20150417-.png}}
+
+**// NOTE: recommended to have a pull-up resister on "dp24" to prevent the chip goes into ISP mode //**
+
+Picture with detailed pin name is available here:\\
+[[/media/uploads/okano/pinout_dip28_detail-20150417-.png]]
+
+== LPCXpresso ==
+2015-Apr-17 version : 
+* SPI(2) pin labels added
+
+{{/media/uploads/okano/pinout_xpresso-20150417-.png}}
+
+
+= Files =
+These pictures are drawn by Apple Keynote. The original file and pictures in pdf/png format are available in next links 
+
+ [[/media/uploads/okano/lpc1114_pinout-20150417-.key.zip]] \\
+ [[/media/uploads/okano/lpc1114_pinout-20150417-.pdf]] \\
+ [[/media/uploads/okano/lpc1114_pinout_png-20150417-.zip]] \\
+
+Board and chip original pictures are available here..\\
+[[/media/uploads/okano/lpc1114_dip28_picture.jpg]] \\
+[[/media/uploads/okano/lpc1114_cqboard_picture.jpg]] \\ [[/media/uploads/okano/lpc1114_lpcxpresso_picture.jpg]] \\

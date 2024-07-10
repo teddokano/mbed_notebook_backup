@@ -1,0 +1,121 @@
+{{/media/uploads/okano/dsc_1334l.jpg}}
+
+
+[[http://mbed.org/handbook/mbed-FRDM-KL25Z | mbedがFreescale社のKL25Zに対応した]]と聞いたので早速試してみた．\\
+Freescale KL25Zの評価基板「FRDM-KL25Z」のデバッガ部のファームを入れ替えることで，この基板をmbed化できる！\\
+(購入したのは[[http://www.chip1stop.com/dispDetail.do?partId=FREE-0028314 | ココ]]．国内在庫があった(2013年2月25日現在)ので)
+
+<<info>>
+この基板についての情報が[[http://mbed.org/users/okini3939/ | Suga koubou]]さんにより日本語化されています．\\
+『[[http://mbed.org/users/okini3939/notebook/mbed_frdm_kl25z_jp/ | mbed FRDM KL25Z 諸元]]』
+<</info>>
+
+
+=== ファームウェアの更新 ===
+
+まずファームウェアの更新が必要．\\
+手順はこのページ( [[http://mbed.org/handbook/mbed-FRDM-KL25Z-Upgrade]] )に示されている通り．\\
+ただ，この最初のブートローダを書くときにだけ，Windowsマシンが必要なので，予め用意しておかなくてはなりません．
+
+<<info>>
+ファームウェア更新手順の詳細はこちらで．\\
+『[[http://mbed.org/users/Norisuke/notebook/mbed-frdm-kl25z-Getting-started-jp/ | mbed FRDM KL25Z ゲッティングスターテッド]]』\\
+『[[http://jksoft.cocolog-nifty.com/blog/2013/03/mbedfrdm-kl25z-.html | mbedボード FRDM-KL25Z]]』
+<</info>>
+
+
+===ターゲットの登録===
+
+ファームウェアを更新してUSBケーブルを挿し直すとmbedストレージとして認識してくれます．これを開くと中に「mbed.htm」があり，
+
+{{/media/uploads/okano/file.png}}
+
+これを開くと..
+* もしログインした状態で開いたのなら，
+**このページ「[[http://mbed.org/users/chris/notebook/mbed-frdm-kl25z-introduction/ | mbed FRDM KL25Z Introduction]]」が開く．
+** これと同時にコンパイラのターゲット設定も自動で追加されるようです．
+* そうでなければ
+** ユーザ登録画面に行くようです．
+
+<<info>>
+これまでのmbed(青とか黄とか)では1個の基板で1アカウントにしかターゲットを登録できませんでしたが，このmbed-KL25Zでは複数のアカウントにターゲットを追加できるようです (mbed 2.0でリニューアルされたページで「フリーツール」となったことが説明されていたけど，これはその現れ？)．
+<</info>>
+
+===ターゲットを選択してコンパイル===
+
+上記の操作でKL25Zをターゲットとして登録し終わると，コンパイラページで選択可能になっています．
+
+{{/media/uploads/okano/targets.png}}
+
+コンパイラページのNewボタンで新しいプログラムを作って，KL25Z用にコンパイルすると*.binファイルが降ってきます．
+
+===実行ファイルをターゲットにコピー，実行===
+
+マウントされたMBEDストレージに先ほどのbinファイルをドラッグ・アンド・ドロップ．\\
+これでファイルが保存され，リセットを押すとプログラム実行が始まるのかと思いきや，ストレージは一旦アンマウントされて再度マウントされました．中を開いてみると.. ファイルが消えてる (@o@)/\\
+ちょっとビックリしましたが，どうやらそういう仕様みたい．
+
+その後，SW1(ファームのアップデートのとき使った，あのボタン)を押したり，USBケーブルを抜き差ししたりすると目出度くプログラムが実行されます．
+
+下の写真はLEDチカチカ(Lチカ)プログラム実行中の様子
+
+{{/media/uploads/okano/dsc_1334s.png}}
+
+printfもこれまで通り
+
+{{/media/uploads/okano/hello_kz25z.png}}
+
+<<info>>
+ちなみにストレージには非対応なのかなと思い，[[http://mbed.org/handbook/LocalFileSystem | サンプルコード]]をインポートしてライブラリをアップデートし，コンパイルしてみたけど「LocalFileSystemが定義されていない」というエラーが出た．\\
+[[http://cache.freescale.com/files/soft_dev_tools/hardware_tools/schematics/FRDM-KL25Z_SCH.pdf?fpsp=1 | 回路図]]を見ると2MBのSPI接続のフラッシュが搭載されているので，今後サポートされるといいなぁ..なんて思います．\\
+[[https://twitter.com/YoneyamaFuyuki/status/307101385604882432 | Twitterで指摘をいただきました．**実機ではフラッシュメモリが未実装**とのこと．]] (いま手元に基板がないので確認出来次第訂正します)
+
+確かに実回路上では実装されていませんでした．ご指摘ありがとうございました m(_ _)m   [2013/03/01追記]\\
+ {{/media/uploads/okano/dsc_1347.jpg}}
+<</info>>
+
+<<info>>
+mbed-KL25ZはUSBツリーの中でどのように見えるのかと思い，確認すると「MBED CMSIS-DAP」の文字が！\\
+オフラインデバッガも使えそうです(^ ^)\\
+{{/media/uploads/okano/usb-tree.png}}
+<</info>>
+
+<<info>>
+RGBの青色LEDの点灯はデフォルト・プログラムのLED1の指定でできたけど，その他LED1〜LED4がどのように接続されているのかを確認してみました．\\
+しかし[[http://cache.freescale.com/files/soft_dev_tools/hardware_tools/schematics/FRDM-KL25Z_SCH.pdf?fpsp=1 | 回路図]]を見ても4個目のLEDが無さそうなのでヘッダファイルも見てみます．
+
+ヘッダファイルを見るには..\\
+プログラムをたとえばKeil uVision4用にExportするとヘッダファイルをローカルに持ってこれます．これを解凍して中を見てみるとmbed/KL25Z/PinNames.hというファイルがあるのでこれでLED1などの定義を見ることができます．\\
+これを見るとLED3とLED4は同じLEDが指定されていることがわかりました．\\
+それから「LED_BLUE」のように色名でLEDを指定できるのは便利ですね！
+<<code title=LED name definition part in mbed/KL25X/PinNames.h>>
+
+
+    // mbed original LED naming
+    LED1 = LED_BLUE,
+    LED2 = LED_GREEN,
+    LED3 = LED_RED,
+    LED4 = LED_RED,
+
+<</code>>
+
+ちなみにLEDのONとOFFは
+* 1と書くとOFF
+* 0を書くとON
+になっていて，青や黄色のmbedとは論理が逆になってます．
+
+これは単純にマイコンのポートがKL25Zではカソード側に接続されて電流を引っ張る側になっているため．\\
+青や黄ではアノード側から電流を流すように接続されています．
+
+青いmbedのLEDの[[http://mbed.org/media/uploads/chris/mbed-005.1.pdf | 接続]]\\
+{{/media/uploads/okano/blue_led_conn.png}}
+
+FRDM-KL25ZのLEDの[[http://cache.freescale.com/files/soft_dev_tools/hardware_tools/schematics/FRDM-KL25Z_SCH.pdf?fpsp=1 | 接続]] (LEDの部分のみ) \\
+{{/media/uploads/okano/kl25z_led_conn.png}}
+
+
+<</info>>
+
+<<info>>
+あとから気づいたんですけど，このボード用の[[http://mbed.org/handbook/mbed-FRDM-KL25Z-Examples | サンプルコード]]が用意されているみたいです
+<</info>>

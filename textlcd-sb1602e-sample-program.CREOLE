@@ -1,0 +1,302 @@
+<<info>>
+Latest version : Version 2.0 is available. \\
+Latest version has improved usability. \\
+Please find following page. \\
+
+* Demo program with same functions of TextLCD_SB1602E.
+**[[http://developer.mbed.org/users/okano/code/SB1602E_test/]]
+
+* Component page.
+**[[http://developer.mbed.org/components/SB1602E/]]
+
+* Library page
+** [[http://developer.mbed.org/users/okano/code/SB1602E/]]
+<</info>>
+
+<<info>>
+** このコードは古いバージョンです**
+
+バージョン2.0 が公開されています. \\
+新しいバージョンでは使い勝手が改善されています．\\
+以下のページを御覧ください．\\
+
+* 新ライブラリ対応のデモ・プログラム(機能はこれまでのものと同じです)
+**[[http://developer.mbed.org/users/okano/code/SB1602E_test/]]
+
+* コンポーネント・ページ
+**[[http://developer.mbed.org/components/SB1602E/]]
+
+* ライブラリ・ページ
+** [[http://developer.mbed.org/users/okano/code/SB1602E/]]
+<</info>>
+
+{{http://mbed.org/media/uploads/okano/lcd_demo.jpg}}
+
+(...bitmap pattern in picture above is not so nice. I will improve it in
+future.)
+
+==What is this?==
+
+A sample code for a TextLCD. This can drive SB1602E, provided by
+StrawberryLinux.
+
+http://strawberry-linux.com/catalog/items?code=27002 (Japanese page)
+
+{{http://mbed.org/media/uploads/okano/lcd.png}}
+
+The SB1602E is a low voltage (3.3V) text LCD module interfaced by I2C (Based
+on Sitronix ST7032 chip).
+
+So it may be one of best choice for mbed applications :)
+
+This module has 10 pin connector (only 5 pins od those are used), the pins are
+named as following...
+
+{{{
+pin  function
+  1  /RESET (pull-up to pin5)
+  2  SCL    (connect pin10 of mbed)
+  3  SDA    (connect pin9 of mbed, requires pull-up)
+  4  GND    (connect pin1 of mbed, requires pull-up)
+  5  VDD    (connect pin40 of mbed)
+  6..10 nc
+}}}
+
+The pin1(/RESET) is not really required to assert the signal, so for the
+test/demo purpose it can be pulled-up to VDD of pin5.
+
+This sample code doesn't use the reset pin (the reset can be done by turn-on.
+The user manual says the reset is required if the supply voltage goes up
+slow).
+
+==Code:==
+
+<<program http://developer.mbed.org/users/okano/code/TextLCD_SB1602E/>>
+
+This project requires two header files which defines classes (both files are
+included in this project).
+
+"I2cBusDevice.h" is a generic (base) class for I2C devices.
+
+"TextLCD_SB1602E.h" is a derived class of I2cBusDevice for TextLCD instance.
+
+==How to use?==
+
+The TextLCD_SB1602E class provides some functions to control it.
+
+This project will show you the demo of those features.
+
+Please refer to source code to find actual usage sample.
+
+===Declaration===
+
+In the application code, it requires I2C and TextLCD_SB1602E instances.
+
+Those can be declared like this.
+
+{{{
+#include        "mbed.h"
+#include        "TextLCD_SB1602E.h"
+
+I2C                i2c( p9, p10 );        // sda, scl
+TextLCD_SB1602E    lcd( &i2c );
+}}}
+
+Now, the LCD will be ready to use.
+
+===Contrast adjust===
+
+The LCD contrast can be controlled by contrast function in the class. The call
+will be like this.
+
+{{{
+lcd.contrast( 0x35 );
+}}}
+
+The argument "0x35" is the value for the setting.
+
+To define the functions more clearly, I will explain following part in more
+generic way: the contrast function can be described as...
+
+{{{
+TextLCD_SB1602E::contrast( char contrast )
+}}}
+
+The argument value should be in range of 0x00..0x3F.
+
+(If you don't have enough contrast adjust range, you may try modifying
+Rab[2..0] in Follower control. See ST7032 data sheet)
+
+===Putting character/string===
+
+Characters and string, or string with format can be put on LCD by following
+functions.
+
+{{{
+TextLCD_SB1602E::putc( char line, char c )
+TextLCD_SB1602E::puts( char line, char *s )
+TextLCD_SB1602E::printf( char line, char *format, ... )
+}}}
+
+All these finctions are similar to the normal (stdio's) functions but requires
+line number as first argument. The line number should be 0 (upper line) or 1
+(lower line).
+
+If you set '\r' or '\n' character, following charatter space (right side of
+last character) will be cleared and cursor will be return to the line head.
+
+===Custom characters by CGRAM===
+
+Also, CGRAM can be operated.
+
+{{{
+TextLCD_SB1602E::set_CGRAM( char char_code, const char* cg )
+TextLCD_SB1602E::set_CGRAM( char char_code, char v )
+}}}
+
+You can set customized characters for character code from 0 to 7.
+
+The "const char* cg" should be 8 bytes (char) array that contains bitmap data.
+
+The "char v" is an option if you want to set same data for each 8 rows in the
+bitmap.
+
+==Note:==
+
+On these programs, expecting to use the pins 9 and 10 for I2C bus and these
+pins should be pulled-up properly.
+
+==Reference:==
+
+http://strawberry-linux.com/catalog/items?code=27002 (Japanese page)\\
+http://strawberry-linux.com/pub/ST7032i.pdf (datasheet in English)
+
+<<info>>
+最新版のVersion 2.0がリリースされています. \\
+最新版では使い勝手の面が改善されています． \\
+こちらのページを参照ください\\
+
+* Demo program with same functions of TextLCD_SB1602E.
+**[[http://developer.mbed.org/users/okano/code/SB1602E_test/]]
+
+* Component page.
+**[[http://developer.mbed.org/components/SB1602E/]]
+
+* Library page
+** [[http://developer.mbed.org/users/okano/code/SB1602E/]]
+<</info>>
+
+==これは？==
+
+キャラクタ液晶を操作するサンプルプログラムです．このプログラムはストロベリー・リナックス社が供給しているSB1602Eを操作できます．
+
+http://strawberry-linux.com/catalog/items?code=27002
+
+{{http://mbed.org/media/uploads/okano/lcd.png}}
+
+SB1602Eは(Sitronix社
+ST7032チップ・ベースの)低電圧(電源3.3V)キャラクタ液晶モジュールで，I2Cインターフェースを介して制御するためmbedで使うのに便利です．
+
+このモジュールは10ピンのコネクタを備えており，このうちの5ピンを使います．
+
+{{{
+pin  function
+  1  /RESET (pull-up to pin5)
+  2  SCL    (connect pin10 of mbed)
+  3  SDA    (connect pin9 of mbed, requires pull-up)
+  4  GND    (connect pin1 of mbed, requires pull-up)
+  5  VDD    (connect pin40 of mbed)
+  6..10 nc
+}}}
+
+1番ピンの/RESETは使わなくてもよいようです．このサンプルコードのようなデモ/テストの目的には5番ピンの電源にプルアップして使えます．
+
+このコードではRESETは使っていません(マニュアルによると電源の立ち上がりの遅い時には，リセット・ピンを使用する必要があるようです)．
+
+==コード:==
+
+<<program http://developer.mbed.org/users/okano/code/TextLCD_SB1602E/>>
+
+このプロジェクト(プログラム)には2つのヘッダファイルが必要です(両方ともこのプロジェクトに含まれています)．
+
+「I2cBusDevice.h」はI2Cデバイスのベースクラスとして，TextLCD_SB1602E.h」はそこからの派生クラスとして使われます．
+
+==使い方:==
+
+TextLCD_SB1602Eクラスには，いくつか関数が用意されており，キャラクタ液晶の機能を制御できます．
+
+このプログラムはその使い方のデモになっています．
+
+実際の使用法サンプルはソースコードを参照ください．
+
+===宣言===
+
+このクラスを使うにはI2CとTextLCD_SB1602Eの宣言を以下のように行います．
+
+{{{
+#include        "mbed.h"
+#include        "TextLCD_SB1602E.h"
+
+I2C                i2c( p9, p10 );        // sda, scl
+TextLCD_SB1602E    lcd( &i2c );
+}}}
+
+これで使用準備ができました．
+
+===コントラスト調整===
+
+このクラス内のcontrast関数によって液晶のコントラストを調節できます．この関数の呼び出しは次のように行えます．
+
+{{{
+lcd.contrast( 0x35 );
+}}}
+
+引数の「0x35」はコントラストの設定値になります．
+
+ここから先の関数の説明ではその詳細を明確にするため，少し一般化した書き方をすることにします．コントラスト関数の場合は次のように書きます．
+
+{{{
+TextLCD_SB1602E::contrast( char contrast )
+}}}
+
+引数には0x00から0x3Fの値を指定します．
+
+(もしこの値の設定で満足な結果が得られない場合は，このチップのFollower制御のRab[2..0]の変更が有効です．ST7032のデータシート参照)
+
+===文字/文字列の表示===
+
+次の関数を使って，文字，文字列やフォーマット付き文字列を液晶に表示させることができます．
+
+{{{
+TextLCD_SB1602E::putc( char line, char c )
+TextLCD_SB1602E::puts( char line, char *s )
+TextLCD_SB1602E::printf( char line, char *format, ... )
+}}}
+
+これらの関数は通常の(stdioの)これらの関数と同様ですが，第一引数として行番号を指定する必要があります．行番号は0(上側)または1(下側)を指定します．
+
+文字，または文字列の中に'\r'または'\n'が含まれていると，その位置以降(そこから右側)の部分が消去され，次の文字が打たれるべき位置が行先頭に戻ります．
+
+===CGRAMによるユーザ定義のキャラクタ表示===
+
+この他にCGRAMの操作も行うことができます．
+
+{{{
+TextLCD_SB1602E::set_CGRAM( char char_code, const char* cg )
+TextLCD_SB1602E::set_CGRAM( char char_code, char v )
+}}}
+
+0から7まで文字コードに独自のキャラクタを設定できます．
+
+第二引数の「const char* cg」は8バイト(char)の配列で，ここにビットマップデータを用意しておきます．
+
+第二引数に「char v」を使う関数は，ビットマップの横方向を同じパターンで埋めてしまう場合に使えます．
+
+==注意:==
+
+このサンプルプログラムではI2Cバスにmbedの9ピンと10ピンを使います．これらのピンは適切にプルアップされてなくてはなりません．
+
+==参考:==
+
+http://strawberry-linux.com/catalog/items?code=27002 (Japanese page)\\
+http://strawberry-linux.com/pub/ST7032i.pdf (datasheet in English)

@@ -1,0 +1,266 @@
+[[https://developer.mbed.org/blog/entry/Introducing-mbed-OS-5/|mbed OS 5が発表]]され，これまでのmbed Classic(mbed 2.0)環境とmbed OS(mbed 3.5)がうまく統合されました．\\
+このmbed OS 5ではオンライン・コンパイラに加え，自分のPC上でもコマンドラインでコンパイルが可能になっています．（さらにmbed.orgやGithubと連携したバージョン管理も可能になっています）\\
+
+このインターフェースは「mbed CLI (Command Line Interface)」と呼ばれ，次のページのビデオでその使い方が紹介されています．\\
+https://docs.mbed.com/docs/mbed-os-handbook/en/5.1/getting_started/blinky_cli/
+
+せっかくMacを使っているのですから，簡単にインストールしてササッと使えればいいのですが，基本的にUNIXのツールであるこれらのコマンドを使えるようにするには，いくつかの手順が必要です．
+
+このノートブック・ページでは，[[https://itunes.apple.com/jp/app/os-x-el-capitan/id1018109117?mt=12|Mac OS X（バージョン10.11.6）]]と[[https://developer.mbed.org/platforms/mbed-LPC1768/|mbed LPC1768]]でこれらの環境を動かしてみた手順をまとめてあります．
+
+<<info>>
+「ワタシ，Windowsユーザなんですけど」という方は，[[https://developer.mbed.org/users/ytsuboi/|ツボイ大先生]]が書かれた\\
+[[https://developer.mbed.org/users/ytsuboi/notebook/ja-setup-mbed-cli-on-windows/ | 『[lang:ja] mbed CLIをWindowsで使ってみる（環境構築編）』]]を御覧ください ( ´ ▽ ` )ﾉ
+
+LinuxでのCLI環境のセットアップについては，こちらの[[http://qiita.com/hotchpotch/items/4d87c13b97d236db5b4f|『mbed OS 5 の CLI 開発環境を Linux 上に構築する』]]を参照ください．
+<</info>>
+\\
+
+=0. 準備編=
+mbed CLIは簡単にインストールして使うことができるようになっているのですが，その下準備としていくつかのソフトをインストールしておかなくてはなりません．\\
+この例では「[[http://brew.sh/index_ja.html|Homebrew]]」と呼ばれるパッケージマネージャを使って，必要なソフトを準備します．
+
+\\
+
+==0.1 Xcodeのアップデートをしておく==
+まずその前に，HomebrewはXcodeの最新版を必要とするため，まずXcodeのインストールまたはアップデートをしておきます．\\
+Mac OS Xのアプリケーション：App Storeから[[https://itunes.apple.com/jp/app/xcode/id497799835?mt=12|Xcodeをインストールまたはアップデート]]しておいてください．
+
+{{/media/uploads/okano/xcode_in_app_store.png|Xcode_in_app_store|640}}
+
+\\
+
+==0.2 Homebrewのインストール==
+[[http://brew.sh/index_ja.html|Homebrew]]自体のインストールも簡単です．\\
+ターミナル.appを開き以下のコマンドを打って実行するだけです．\\
+※ このHomebrewのインストール・コマンドはbash上で実行する必要があります．もし他のシェルを設定して使っている場合はbashで実行してください．
+
+<<info>>
+以下に出てくるコマンドの例には，行頭に「$」マークが付いていますが，これはユーザの入力を待つプロンプトです．実際にコマンドを入力する際にはこれを打つ必要はありません．
+<</info>>
+
+|$ **/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"**|
+
+\\
+
+==0.3 Pythonのインストール==
+mbed CLIの実行に必要なPythonをインストールします．
+
+|$ **brew install python**|
+
+|$ **brew link {{{--}}}overwrite python**|
+
+\\
+
+==0.4 GitとMercurial，GCC_ARMのインストール==
+
+GCC_ARM はコンパイラ，GitとMercurialはコードのインポートや公開を行うために必要なツールです．\\
+以下のコマンドを順番に実行してコンパイラをインストールします．
+
+
+|$ **brew tap ArmMbed/homebrew-formulae**|
+
+|$ **brew install arm-none-eabi-gcc**|
+
+<<info>>
+参考：[[https://gist.github.com/joegoggins/7763637#gistcomment-1250738|brewコマンドによるGCC_ARMのインストール]]
+<</info>>
+
+<<info>>
+参考：[[https://os.mbed.com/users/okano/notebook/setup-mbed-cli-on-mac-os-x-JP/?compage=1#c34482|坪井さんから新しい方法についてのアドバイスを頂きました．]]\\
+旧内容では以下のようなコマンドを掲載していました．
+
+|$ **brew tap PX4/homebrew-px4**|
+|$ **brew update**|
+|$ **brew install git hg gcc-arm-none-eabi**|
+<</info>>
+
+<<comment>>
+|$ **brew tap PX4/homebrew-px4**\\$ **brew update**\\$ **brew install gcc-arm-none-eabi**|
+<</comment>>
+
+\\
+
+==0.5 mbed CLIのインストール==
+mbed CLIツールのインストールが終われば，これで準備は完了です．
+
+|$ **pip install mbed-cli**|
+
+\\
+
+=1. 動作確認編=
+ここからは[[https://www.youtube.com/watch?v=PI1Kq9RSN_Y|mbed CLIの紹介ビデオ]]に従って，動作を確認していきます．
+
+\\
+
+==1.1 mbedコードのインポート==
+Lチカ(LED点滅)のサンプルコードで動作を確認します．\\
+まずこの実験を行う前に実験用のディレクトリを作っておきました．\\
+ここではその例として自分のユーザディレクトリの下に##mbed_os5##という名前のディレクトリを用意し，その中で作業を行いました．
+
+自分のユーザディレクトリ内にディレクトリを作るには以下の様なコマンドを順に実行します
+|$ **cd**|
+
+|$ **mkdir mbed_os5**|
+
+ディレクトリを用意したらそのディレクトリへ移ってから
+
+|$ **cd {{{~}}}/mbed_os5**|
+
+以下のコマンドを実行します．
+
+|$ **mmbed import https://github.com/ARMmbed/mbed-os-example-blinky**|
+
+インポートを行うと，インポートしたプログラム名のディレクトリが，実験用ディレクトリの中にできています．\\
+新しくできた##mbed-os-example-blinky##ディレクトリへ移動して中身を確かめてみましょう．
+
+|$ **cd mbed-os-example-blinky**| 
+
+|$ **ls**| 
+
+
+<<code>>
+$ ls
+CONTRIBUTING.md  main.cpp         mbed-os.lib      resources
+README.md        mbed-os          mbed_settings.py
+<</code>>
+
+//lsコマンドの実行例//
+
+\\
+
+==1.2 実行環境の設定==
+次に実行環境の設定を行います．\\
+##mbed detect##コマンドを実行すると，その時点でMacに接続されているmbedを検出してその結果を返してきます．
+
+|$ **mbed detect|
+<<code>>
+$ mbed detect
+   (((中略)))
+[mbed] Detected LPC1768, port /dev/tty.usbmodem14202, mounted /Volumes/MBED, interface version unknown:
+[mbed] Supported toolchains for LPC1768
+| Target  | mbed OS 2 | mbed OS 5 |    uARM   |    IAR    |    ARM    |  GCC_ARM  |
+|---------|-----------|-----------|-----------|-----------|-----------|-----------|
+| LPC1768 |     -     | Supported | Supported | Supported | Supported | Supported |
+Supported targets: 1
+Supported toolchains: 4
+<</code>>
+
+//mbed detectコマンドの実行例//
+
+\\
+
+もしmbedが接続されていなければ，「mbedが検出できなかった」メッセージが返ってきます．
+
+<<code>>
+$ mbed detect
+[mbed] Working path "~/mbed_os5/mbed-os-example-blinky" (library)
+[mbed] Program path "~/mbed_os5/mbed-os-example-blinky"
+[mbed] No mbed targets were detected on your system.
+<</code>>
+
+//mbed detectコマンドの実行例：mbedが検出できなかった//
+
+\\
+
+次にツールチェーン（コンパイラ）とターゲットの指定を行います．\\
+##mbed detect##コマンドで返ってきた情報を元に，ここではツールチェーンにGCC_ARM，ターゲットにLPC1768を指定します．
+
+|$ **mbed toolchain GCC_ARM|
+
+|$ **mbed target LPC1768|
+
+<<code>>
+$ mbed toolchain GCC_ARM
+[mbed] Working path "~/mbed_os5/mbed-os-example-blinky" (library)
+[mbed] Program path "~/mbed_os5/mbed-os-example-blinky"
+[mbed] GCC_ARM now set as default toolchain in program "mbed-os-example-blinky"
+$ mbed target LPC1768
+[mbed] Working path "~/mbed_os5/mbed-os-example-blinky" (library)
+[mbed] Program path "~/mbed_os5/mbed-os-example-blinky"
+[mbed] LPC1768 now set as default target in program "mbed-os-example-blinky"
+<</code>>
+
+//mbed toolchain / mbed targetコマンドの実行例//
+
+\\
+
+==1.3 コンパイル==
+いよいよコンパイルです．\\
+##mbed compile##のコマンド一発でコンパイル（ビルド）を行ってくれます．
+
+|$ **mbed compile|
+
+<<code>>
+$ mbed compile  
+   (((中略)))
+
+---
+Building project mbed-os-example-blinky (LPC1768, GCC_ARM)
+Scan: mbed-os-example-blinky
+
+   (((中略)))
+   
+Link: mbed-os-example-blinky
+Elf2Bin: mbed-os-example-blinky
+Post-Build: mbed-os-example-blinky
+| Module           |         .text |       .data |        .bss |
+|------------------|---------------|-------------|-------------|
+| [fill]           |     608(+608) |       4(+4) |     22(+22) |
+| [lib]/c.a        |   4736(+4736) | 2108(+2108) |     89(+89) |
+| [lib]/gcc.a      |     760(+760) |       0(+0) |       0(+0) |
+| [lib]/misc       |     180(+180) |       4(+4) |     28(+28) |
+| main.o           |       76(+76) |       0(+0) |       0(+0) |
+| mbed-os/drivers  |       70(+70) |       0(+0) |       0(+0) |
+| mbed-os/hal      |   1626(+1626) |       4(+4) |     67(+67) |
+| mbed-os/platform |   4400(+4400) |   260(+260) |   348(+348) |
+| mbed-os/rtos     |   6520(+6520) |   168(+168) | 5973(+5973) |
+| mbed-os/targets  |   2720(+2720) |       4(+4) |   241(+241) |
+| Subtotals        | 21696(+21696) | 2552(+2552) | 6768(+6768) |
+Total Static RAM memory (data + bss): 9320(+9320) bytes
+Total Flash memory (text + data): 24248(+24248) bytes
+
+Image: ./BUILD/LPC1768/GCC_ARM/mbed-os-example-blinky.bin
+<</code>>
+
+//mbed compileコマンドの実行例//
+
+\\
+
+==1.4 実行バイナリのコピー (ターゲットへの書き込み)==
+コンパイルが完了すると，実験用ディレクトリの中の##BUILD##→##LPC1768##→##GCC_ARM##ディレクトリに実行ファイル：##mbed-os-example-blinky.bin##ができます．これをmbedにコピーして，mbed基板上のリセットボタンを押せば，実行できます．
+
+もしコマンドライン上でファイルのコピーを行うなら，次のような##cp##コマンドで実行できます．
+
+|$ **cp BUILD/LPC1768/GCC_ARM/mbed-os-example-blinky.bin /Volumes/MBED/**|
+
+あるいは##BUILD##ディレクトリをFinderで開いて，GUI上でドラッグ・アンド・ドロップでコピーすることもできます．\\
+コマンドラインでは##open##コマンドを使って指定したディレクトリを開くことができるので，次のようなコマンドを用いることでFinderからは直接見えなかったディレクトリをGUI上で開くことができます．
+
+|$ **open BIULD**|
+{{/media/uploads/okano/dot_build.png|under_dot_build|640}}\\
+//この図のフォルダ名は「.build」になっていますが，現バージョンのmbed-cliでは上記の通り「BUILD」フォルダができます//
+
+このファイルをマウスでつまんでmbedに入れれば，GUI上で簡単にコピーできます．
+
+\\
+
+\\
+
+<<info title="mbed CLIを使ってみて">>
+プログラムをインポートした後のmbed-osディレクトリ（mbed2.0のプログラムの場合はmbedディレクトリ）はどちらも250MBを超える大きな容量となるようです．複数のプログラムを容量の少ないローカルマシンで管理する場合には注意が必要となりそうです．\\
+
+{{/media/uploads/okano/sizeof_project.png|sizeof_project|640}}
+<</info>>
+
+<<info title="更新情報">>
+2020年6月2日更新\\
+[[https://os.mbed.com/users/okano/notebook/setup-mbed-cli-on-mac-os-x-JP/?compage=1#c34482|坪井さんから新しい方法についてのアドバイスを頂き]]それに従ってひと通りの動作を試してみたら，いろいろ変わってた．なので必要な部分を更新．
+* 指摘いただいたインストールコマンド
+* サンプルコードのインポート先URL
+* コマンド実行時の各画面表示
+* コンパイル結果が入るフォルダ名
+
+**しかしサンプルコードをコンパイルして走らせてみただけなのに，何故かLED1の点滅周期が異常に長いぞ ( ꒪﹃ ꒪) ?
+**
+<</info>>

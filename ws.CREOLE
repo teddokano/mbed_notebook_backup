@@ -1,0 +1,557 @@
+<<info title="このページについて">>
+このページは，**mbedの基本的な使い方**を解説するためのワークショップを開催するにあたり作成しました．\\
+依頼者の意向により，デジタル入出力，アナログ入力，シリアル出力までの動作確認ができることを目標としました．\\
+開催時間として(mbed.orgに登録済みの状態から)45分以内で完了することを目標に組まれています．\\
+
+このページの内容はワークショップの補助的な内容となっています．\\
+各サンプルプログラムへのリンクとハードウェアの結線方法を示すのが本来の目的で，その他は参考情報です．
+----
+このようなページへのリンクをワークショップ会場で配布するのは若干面倒ですが，実際の会場では以下の様な内容のファイルを"ws.htm"という名前で作成し，mbedストレージ内に保存しておくと，その手間を省くことができます （＾＾）
+<<code>>
+<!-- mbed Microcontroller Website Shortcut -->
+<html>
+<head>
+<meta http-equiv="refresh" content="0; url=http://developer.mbed.org/users/okano/notebook/ws/" />
+<title>mbed WS Website Shortcut</title>
+</head>
+<body></body>
+</html>
+<</code>>
+<</info>>
+<<info title="このページの利用について">>
+この資料は，独自に開催するハンズオン・セミナーや別資料への引用など，**ご自由にお使いください**．\\
+また，お気づきの点など(不明点，誤り，改善案，その他)ありましたら，ご連絡いただければ嬉しいです．
+
+変更や改良を加えた資料を作成する際には，後の利用者の便宜のため，このページへの[[https://developer.mbed.org/users/okano/notebook/ws/|リンク({{{https://developer.mbed.org/users/okano/notebook/ws/}}})]]を明記するように願います．この他には特に制限事項はありません．\\
+[[https://creativecommons.org/licenses/by/3.0/deed.ja|{{http://mirrors.creativecommons.org/presskit/buttons/88x31/png/by.png|cc_logo_by|100}}]]\\
+<</info>>
+
+=0. はじめに=
+mbedについての，いろいろな基本的なこと．\\
+
+2009年に最初に発売された**[[https://developer.mbed.org/platforms/mbed-LPC1768/|mbed LPC1768]]**は多くの資料が用意されており，mbedを使う上での事実上のリファレンスとなっています．基本的な使い方を習得したり，あるいはコードを(プラットフォーム非依存を前提とした)ライブラリとして公開する際には，この動作を基本に考えるのが良いでしょう．
+
+{{http://developer.mbed.org/media//img/boardlogos/lpc1768/pinout.png}}
+
+mbedの情報は，日本語を含む様々なものが[[http://mbed.org]]内で公開されています．これからmbedを始める人にとっては次のリンクが良い情報源となるでしょう．
+
+**[[http://developer.mbed.org/users/nxpfan/notebook/links_4_mbed_primer/|これからmbedをはじめる人向けリンク集]]**
+
+\\
+\\
+
+=1. 準備=
+
+[[http://mbed.org|mbed.org]]でユーザ登録をしましょう．\\
+自分の名前，メールアドレスの情報，mbed.org内で使うユーザ名，パスワードを入力し，規約を読んで同意した後に登録を行います．\\
+ユーザはアカウントにログインした状態で自分のコードを書いたり，そのコードやその他の情報を公開・共有できるようになります．アカウントを作るまでのステップは次のリンクに詳しく書かれてあります．
+
+**[[http://developer.mbed.org/users/nxpfan/notebook/lets_get_started_jp/|mbedを始めましょう！]]**
+
+ワークショップの準備のための簡単な**ユーザ登録ガイド**も用意されています．このガイドにしたがって登録を行えば，**mbed LPC1768**でプログラムを作成する準備が整います．\\
+
+**[[http://developer.mbed.org/users/nxpfan/notebook/mbed_fest_handson_session_registration_guide/| mbed祭り「ふれあいコーナー」のユーザ登録ガイド]]**
+
+\\
+
+<<info title="mbedのハードウェアが動作する仕組み">>
+ハードウェアが動作する仕組みについては，次のリンクで公開されているプレゼン資料の10ページ以降をご覧ください．\\
+[[/media/uploads/okano/mbed_workshop_2015_print.pdf|**『mbedって？』**(ワークショップ用資料．PDF，8MB)]]
+<</info>>
+
+\\
+\\
+
+=2. プログラムを書いてみる=
+
+ではさっそく，プログラムを書いて動作をさせてみましょう．
+
+==2.1 デジタル出力==
+
+最も簡単なプログラムの例です．\\
+コンパイラページで「New program」を実行すると「ひな形」プログラムが作成されます．\\
+一部のマイコン向けには違った名前のひな形が用意されている場合がありますが，ここでは最も基本的な「mbed_blinky」を選択します(デフォルトで選択されています)
+
+<<code>>
+#include "mbed.h"
+
+DigitalOut myled(LED1);
+
+int main() {
+    while(1) {
+        myled = 1;
+        wait(0.2);
+        myled = 0;
+        wait(0.2);
+    }
+}
+<</code>>
+
+mbed_blinkyプログラムを作成すると，そのプログラムの中にはmain.cppとmbedライブラリが入っています．mbedライブラリは「mbed-SDK」とも呼ばれる，マイコンの様々な機能を抽象化したAPIが用意されています．mbedでのプログラミングはこの機能を利用することにより，直感的で移植の用意なコードが書けるようになっています．
+このプログラムはmbed基板上のLEDを点滅させる，俗にいう「LEDチカチカ(Lチカ)」の非常に単純な例ですが，mbedの特徴を非常によく表したものになっています．
+
+この例ではまず##"mbed.h"##をインクルードしてmbedライブラリに必要な宣言を行なっています．これで上記のAPIが使えるようになります．
+
+次に##DigitalOut##クラスのインスタンスが宣言されます．mbedはC++で書かれており，多くのライブラリはクラスとして提供されています．クラスとはC言語でいう「型」のようなもので，このクラスからインスタンス(C言語での変数のようなもの)を作成しています．\\
+##myled##がインスタンスの名前です．その後ろに括弧が付けられ，LED1という文字が入っていますが，これは##myled##を##LED1##という識別子で初期化しています．\\
+##LED1##はmbed LPC1768をUSBコネクタを上にして見た場合，下に並んだ4個のLEDの一番左側を指しています．これらのLEDにはLED1〜LED4の名前が付けられています．##LED1##を，たとえば##p5##のように書き換えると，5番ピンを指定したことになります．\\
+LEDやピンの指定には[[http://developer.mbed.org/media//img/boardlogos/lpc1768/pinout.png|Pinout図]]の青地で示されたラベルが使えます．ピン指定の詳細は[[http://developer.mbed.org/users/mbed_official/code/mbed-src/file/6cc86c42d7e3/targets/hal/TARGET_NXP/TARGET_LPC176X/TARGET_MBED_LPC1768/PinNames.h|こちらのソース]]をご覧ください(mbed LPC1768の場合)．
+
+main関数内では##myled##へ「0」と「1」の代入が繰り返し，##wait()##関数を用いて0.2秒の間隔を開けて行われています．これによりLEDに接続されたピンにHIGHとLOWが出力され，点滅となります．
+
+\\
+\\
+
+==2.2 バス出力==
+
+いくつかのデジタル出力をまとめて扱うことができます．
+
+##BusOut##クラスを用いれば，複数のLEDやピンをまとめることができます．\\
+インスタンス##leds##はLED4〜LED1の4つのLEDをまとめた4ビットの出力となります．ここに値を代入すると，その2進値がLEDに表示されます．
+
+<<code>>
+#include "mbed.h"
+ 
+BusOut  leds( LED4, LED3, LED2, LED1 );
+ 
+int main() {
+    int     count   = 0;
+    
+    while(1) {
+        leds    = count++;
+        wait( 0.1 );
+    }
+}
+<</code>>
+\\
+上のコード例を試すには，これをタイプしたりコピペする必要はありません．\\
+次のプログラムへのリンクを使って，**インポート**してコードを確認し，実行してみましょう．
+
+<<program http://developer.mbed.org/users/okano/code/__BusOut_sample/>>
+
+\\
+\\
+
+==2.3 デジタル入力==
+
+##p5##〜##p30##までのピンは入出力ピンであるため，これを入力として使うこともできます．\\
+##DigitalIn##クラスを使えば，宣言したピンが入力となります．
+
+次のサンプルコードは，まずp5のピンを入力として宣言します．\\
+main関数内でそのピンにマイコン内蔵のプルアップ抵抗を接続しています．\\
+
+ループ内では，読んできたp5の信号を反転してLEDの状態に反映させます．\\
+ボタンが押された時にLOWが入力されるので，それを反転してLEDに出力させれば，ボタン押下げ時にLEDが点灯することになります．
+
+<<code>>
+#include "mbed.h"
+ 
+DigitalOut  myled( LED1 );
+DigitalIn   input( p5 );
+ 
+int main() {
+    input.mode( PullUp );
+    
+    while(1) {
+        myled = !input;
+        wait( 0.1 );
+    }
+}
+<</code>>
+\\
+
+
+ワイヤー付き押しボタンスイッチを次のように接続します．\\
+{{/media/uploads/okano/p5_switch_conection.png|p5_and_switch_connection|320}}\\
+
+回路は次のような構成になっており，ボタンが押されるとp5はHIGH→LOWになります．
+{{/media/uploads/okano/pullup_and_switch.png|p5_pullup_and_switch|320}}\\
+
+<<program http://developer.mbed.org/users/okano/code/__DigitalIn_sample/>>
+
+<<info title="参考：ワイヤー付き押しボタンスイッチと，その接続">>
+{{/media/uploads/okano/switch_with_wires.jpg| switch_with_wires|320}}
+{{/media/uploads/okano/switch_connection_pic.jpg| switch_connection_pic|320}}\\
+適当な長さのビニール線をスイッチの端子にハンダ付け．もう一方の側にQIコネクタ^^※^^を取り付けてあります．QIコネクタにはmbedのピンが挿さります．\\
+通常はこのような部品の接続は，ブレッドボードを用いるのが普通ですが，ブレッドボードの説明に割く時間を省くためにこのような実験治具を用意しました．
+
+※ **QIコネクタ**は共立電子や千石電商などの主な部品店で購入できます．
+* [[http://eleshop.jp/shop/g/g4AM14A/|共立電子の店　エレショップ]]
+* [[https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=3867-N54M|千石ネット通販]]
+* [[http://blog.digit-parts.com/archives/51796900.html|電子工作でよく使う『QIコネクタ』の圧着方法]]
+<</info>>
+
+\\
+\\
+
+
+\\
+\\
+
+==2.4 アナログ入力==
+
+アナログ入力も非常に簡単に使えます．\\
+ただし，使えるピンには制限があります．##p15##〜##p20##の6つのピンが使えます．\\
+
+アナログピンには0V〜3.3Vまでの電圧を入力できます．\\
+##AnalogIn##クラスのインスタンスからは0Vを0.0，3.3Vを1.0とした正規化された値を読むことができます．\\
+このサンプルコードでは，AnalogInのインスタンス##ai##から読んできた値に15.0を掛けて，4ビットの0〜15の値に変換し，４個のLEDでその状態を確認できるようにしてあります．
+
+<<code>>
+#include "mbed.h"
+ 
+BusOut      leds( LED4, LED3, LED2, LED1 );
+AnalogIn    ai( p20 );
+ 
+int main() {
+    while(1) {
+        leds    = (int)(ai * 15.0);
+        wait( 0.01 );
+    }
+}
+<</code>>
+\\
+
+ワイヤー付き可変抵抗は次のように接続します．\\
+{{/media/uploads/okano/p20_vr_connection.png| p20_vr_connection.png |397}}\\
+
+回路は次のような構成になっており，可変抵抗のツマミを回すとp20にかかる電圧が0V〜3.3Vの間で変化します．\\
+{{/media/uploads/okano/vr_and_voltage.png|vr_and_voltage| 397}}\\
+
+<<program http://developer.mbed.org/users/okano/code/__AnalogIn_sample/>>
+
+<<info title="参考：ワイヤー付き可変抵抗と，その接続">>
+{{/media/uploads/okano/vr_with_wires.jpg|vr_with_wires|320}}
+{{/media/uploads/okano/vr_connection_pic.jpg| vr_connection_pic|320}}\\
+適当な長さのビニール線を可変抵抗の端子にハンダ付け．もう一方の側にQIコネクタを取り付けてあります．\\
+ワイヤの色に気をつけて接続してください．
+<</info>>
+
+<<info title="参考：LED点灯パターン・バリエーション">>
+このプログラムにはリビジョン管理機能を用いて，アナログ入力値を別形態の表示に切り替えることもできるようになっています．
+デフォルトではRevision1が使われますが，Revision0に切り替えると，可変抵抗の状態がLED1〜LED4にバーグラフ的に表示されます．これは時間に余裕があれば"リビジョン管理機能の紹介"としてデモしても良いでしょう．
+<</info>>
+
+\\
+\\
+
+==2.5 シリアル出力==
+
+上の「アナログ入力」サンプルコードに**シリアル出力**を追加してみたコード例です．
+##Serial##クラス・インスタンスを作成し，そのメンバ関数として用意されている##printf##を使うだけでシリアルへの出力が可能です．stdio.hで宣言されている入出力用の関数が揃っているので，シリアルの入出力を非常に簡単に使うことができます．\\
+
+<<code>>
+#include "mbed.h"
+ 
+BusOut      leds( LED4, LED3, LED2, LED1 );
+AnalogIn    ai( p20 );
+Serial      ser( USBTX, USBRX );
+ 
+int main() {
+    while(1) {
+        leds    = (int)(ai * 15.0);
+        ser.printf( "voltage = %.2f\r\n", ai * 3.3 );
+        wait( 0.5 );
+    }
+}
+<</code>>
+\\
+
+<<program http://developer.mbed.org/users/okano/code/__Serial_sample/>>
+
+<<warning title="PCでmbedのシリアル出力を見るには">>
+__**Windows編**__\\
+Windowsマシンでmbedのシリアル出力を見るには，mbedのシリアルドライバがインストールされていなくてはなりません．\\
+次のリンクからドライバをダウンロードし，インストールしてください．\\
+[[http://developer.mbed.org/media/downloads/drivers/mbedWinSerial_16466.exe|ドライバ・ダウンロード]]\\
+(ドライバの詳細は[[http://developer.mbed.org/handbook/Windows-serial-configuration|こちら]])
+
+さらに**ターミナルソフト**も必要です．既にお使いのターミナルソフトがインストールされていればそれを．されていなければ次のリンクから[[http://freeware.the-meiers.org|**CoolTerm**]]をダウンロードしてインストールしてください．\\
+
+----
+
+__**Mac編**__\\
+Macではドライバのインストールは必要ありません．\\
+ターミナルソフトもコマンドラインから使える「screen」コマンドが使えます．\\
+あるいはMacでも[[http://freeware.the-meiers.org|**CoolTerm**]]が使えます．screenコマンドの扱いに慣れていない方には，こちらの使用をお薦めします．
+<</warning>>
+<<info title="CoolTermの使い方">>
+まず，接続先を選択します．\\
+**※ __Windowsの場合__は，__接続先は「COM..」のような名前で__現れます．**\\
+
+{{/media/uploads/okano/coolterm.png}}\\
+
+あとはConnectボタンを押すだけです．\\
+{{/media/uploads/okano/coolterm_is_working.png}}\\
+
+<</info>>
+
+<<info title="mbedのピンに，シリアルを直接出力する">>
+この例ではmbedのUSBインターフェースが持っているCDC(USBのコミュニケーション・デバイス・クラス)を通してシリアル通信を行わせていますが，この##USBTX##，##USBRX##を(シリアル・インターフェースで使える)ピン名に変更すれば，ピンに直接シリアル通信を行わせることが可能です．\\
+たとえば
+<<code>>
+Serial      ser( p9, p10 );
+<</code>>
+\\
+
+のような宣言に変更すると，シリアルのASCIIデータが9番ピンに現れます．\\
+
+[[/media/uploads/okano/serial_output_on_p9.png|{{/media/uploads/okano/serial_output_on_p9.png}}]]\\
+<</info>>
+
+\\
+\\
+
+==2.6 シリアル出力(その2)==
+
+「2.3 デジタル入力」で使用した回路で，ボタン状態をターミナルに表示させるシリアル出力プログラム．\\
+
+<<code>>
+#include "mbed.h"
+ 
+DigitalOut  myled( LED1 );
+DigitalIn   input( p5 );
+Serial      ser( USBTX, USBRX );
+ 
+int main() {
+    input.mode( PullUp );
+    
+    while(1) {
+        myled = !input;
+        ser.printf( "switch is %s\r\n", input ? "OFF" : "ON" );
+        wait( 0.5 );
+    }
+}
+<</code>>
+\\
+<<program http://developer.mbed.org/users/okano/code/__Serial2_sample/>>
+
+\\
+\\
+
+=3. 応用 (おまけ情報)=
+
+==3.1 他のmbedで試してみるには==
+
+mbedコンパイラはmbed LPC1768(青mbed)以外のマイコンにも使えます．\\
+今回使用した青mbedはUSBのホスト/デバイスやEthernet機能もついた豪華版ですが，デジタル入出力やシリアルなどの比較的簡単な処理であれば，より安価なマイコンで対応可能です．
+
+たとえばスイッチサイエンスが開発・販売している[[https://www.switch-science.com/catalog/2025/|**mbed LPC824**]]は，より小さい基板で手頃な価格で販売されています．これを使う場合には，この[[http://developer.mbed.org/platforms/Switch-Science-mbed-LPC824/|プラットフォームの解説ページ]]で，オンラインコンパイラに登録を行うだけですぐに使うことができます．
+
+[[http://developer.mbed.org/media/uploads/asagin/xswitch-science-mbed-lpc824.png.pagespeed.ic.op4UiAXznz.png|{{http://developer.mbed.org/media/uploads/asagin/xswitch-science-mbed-lpc824.png.pagespeed.ic.op4UiAXznz.png}}]]
+
+あるいは[[http://developer.mbed.org/platforms/LPC1114FN28/|mbed LPC1114FN28]]は単体で100円〜200円前後で販売されているDIPパッケージのLPC1114をベースに作られています．このmbedの便利なところは，プログラムの書き込みを行ったマイコンを取り外して，そのチップだけを別基板に取り付けて動作させることができる点にあります．\\
+
+[[/media/uploads/okano/pinout_dip28-20150417-.png|{{/media/uploads/okano/pinout_dip28-20150417-.png}}]]
+
+LPC1114でシリアルを使う場合は，上のピン配置図でSerialを使えるピンを確認し ##Serial ser( dp16, dp15 );## のようなピン宣言に変更するだけで移植が済んでしまいます．
+
+\\
+\\
+
+==3.2 いろんな周辺ハードウェアを試してみたい==
+
+mbedでは部品さえ用意できれば，すぐに動作を試せるような環境が整っています．\\
+mbedチームやユーザが作成した数多くのライブラリが，mbed.org内で公開されています．\\
+mbedでは外付けのハードウェアも，非常に簡単に使うことができます．
+
+たとえばテキスト表示を行う液晶パネルも，線を繋いで[[http://developer.mbed.org/components/HD44780-Text-LCD/|サンプルコード]]をインポート・実行するだけで表示ができてしまいます．\\
+<<code>>
+#include "mbed.h"
+#include "TextLCD.h"
+ 
+TextLCD lcd(p15, p16, p17, p18, p19, p20, TextLCD::LCD20x4); // rs, e, d4-d7
+ 
+int main() {
+    lcd.printf("Hello World!\n");
+}
+<</code>>
+{{http://developer.mbed.org/media/cache/components/components/textlcd-helloworld.jpg.200x200_q85.jpg.pagespeed.ce.5oRza3ejc7.jpg}}
+
+非常に多くの周辺デバイス用ライブラリが用意されています．これらの情報はmbedサイト内を検索したり(mbedページ内，あるいはGoogleで「site:mbed.org ◯◯◯◯」のような検索)，情報が纏められている[[http://developer.mbed.org/cookbook/Homepage|**Cookbook**]]や**[[http://developer.mbed.org/components/|Components]]**ページから得ることができます．\\
+
+このような部品ライブラリを閲覧することで，新しい製品アイデアを得ることも可能かもしれません．
+
+\\
+\\
+
+==3.3 便利な機能==
+
+mbedのオンライン環境では，コードがサーバ側に置かれていますが，この環境を利用して**リビジョン管理**を行ったり，**公開したり**，あるいは他のユーザと共同作業を行うことも可能です．
+
+<<info title="サーバに置いてあるコードは，他のユーザから見える？">>
+いいえ．\\
+サーバに置いてあるコードは**公開**しない限り，他のユーザから見ることはできません．\\
+<</info>>
+
+mbedのオンライン環境では「リビジョン・コントロール」機能が使えます．作成中のプログラム/ライブラリの各時点での状態を保存しておくことができます．\\
+保存するには「Commit」ボタンを押します．
+
+ {{/media/uploads/okano/commit_button.png}}
+
+「Commit」ボタンを押す度に「これはどういう状態を保存するのか？」と聞かれます．後から履歴を辿る時の参考になる情報を残すためなので，これがどういう作業を行ったものなのかをメモしておきましょう．\\
+
+<<info>>
+保存した状態(リビジョン)は「Revisions」ボタンを押すことで閲覧できます．またリスト表示されたリビジョンを選択しておき，「Switch」ボタンを押すとソースコードとライブラリを細んされた状態に切り替えることができます．\\
+{{/media/uploads/okano/rivision_history.png}}
+<</info>>
+
+コミットしたコードは**公開**できます．公開の方法は3種類の中から選べます．\\
+* 広く一般に公開する方法
+* URLを知っている人のみがアクセスできるように公開する方法
+* 個人やチーム内だけで公開する方法
+
+<<info title="チーム">>
+グループで開発を行う場合には，チームを作成してそこに複数のユーザを登録して協業することができます．\\
+チームではこの他，コードやWikiページなどをチーム名義で公開することも可能です．
+<</info>>
+
+\\
+\\
+
+==3.4 万が一に備えて==
+
+mbedはとても使いやすい環境ですが，サーバやネットワークに障害が発生した時の備えを持つことをお薦めします．\\
+mbedのオンライン環境で作成したコードは**エクスポート**して自身のPCに持ってくることができます．このとき，[[http://developer.mbed.org/users/okini3939/notebook/offline-toolchains_jp/|どのような環境にエクスポートするのかを選択すれば，オフラインで動く開発環境で]]そのままつかうことができます．
+
+* エクスポートする際のターゲットマイコンによって，サポートされるオフライン環境に違いがあるので注意してください．
+* オフラインで動く環境にはOSに依存するものもあるので，この点も注意が必要です．
+
+Windowsユーザで小さなコードを作成しているのであれば，MDK-ARMが良いでしょう．mbedのオンラインコンパイラと同じARM純正コンパイラが使えます．ただしオンライン版と違って，フリー版では作成するバイナリが32KBまでに制限されています．\\
+[[http://developer.mbed.org/users/MACRUM/notebook/uvision4_debug/]]\\
+
+より大きなバイナリを作成する，あるいはMacやLinuxでオフライン環境を動かす場合には[[http://www.lpcware.com/lpcxpresso/download|LPCXpresso]]が使えるかもしれません．LPCXpressoへのエクスポートが可能なターゲットの種類は少ないですが，先述のOSサポートと256KBまでのバイナリ作成がフリーで行える点がこのツールの利点です．
+
+<<info title="デバッガが使えます">>
+オンライン環境ではデバッガが使えないため，それが必要な場合，LEDの点滅やprintf，はたまた念力を駆使しなければなりませんでした．オフライン環境ではmbedのインターフェース・チップがサポートしている**CMSIS-DAP**を介して，デバッガを使うことができます．
+<</info>>
+
+\\
+\\
+
+==3.5 困ったときは==
+
+mbedを使っていて困ったことが起きた場合には，mbed.org上で聞いてみることができます．\\
+[[http://developer.mbed.org/questions/|Q&Aのページ]]が用意されており，ここで質問をするとコミュニティからの回答が得られる仕組みができています．多くは英語で書かれていますが，日本語の質問でも問題ありません．日本語のユーザで回答可能な内容であれば答えが得られるでしょう．
+
+mbed.orgは英国ARM社が運用しているため，英語の情報が多いわけですが，日本のユーザも活発に活動しています．日本語の情報はmbed.org内で日本語で検索をかけたり，[[http://developer.mbed.org/forum/ja/|日本語フォーラム]]を覗いてみることで得られるでしょう．
+
+<<info title="Q&Aやフォーラムへの書き込みの際は..">>
+mbed.orgへのの書き込みは**Wikiフォーマット**が使えるようになっています．\\
+通常の文章の入力なら問題はありませんが，たとえばコードを貼り付けるような場合には，そのまま貼り付けるとインデントなどが乱れますが，この下のようなタグを使うとうまく表示できます．
+
+{{{
+<<code>>
+int max(int x, int y) {
+    return (x > y) ? x : y;
+}
+<</code>>
+}}}
+
+この他，様々な書法が用意されています．\\
+これについては[[https://developer.mbed.org/cookbook/Wiki-Syntax|こちらのページ(Wiki Syntaxページ)]]で確認することができます．
+<</info>>
+
+またmbed.org内だけではなく[[https://twitter.com/search?q=mbed&src=typd|Twitterなどでも多くの情報交換が行われています]]．「#mbed」のハッシュタグでつぶやくことにより，仲間も増えると思います．
+
+さらに，NXPのマイコンに関しては，多くの日本語情報が発信されています．是非[[http://www.nxp-lpc.com/|NXPのマイコンのページ]]も御覧ください．
+
+<<info title="さらに最新の情報に触れるには：「mbed祭り」のご案内">>
+{{https://pbs.twimg.com/media/B_f9Y9SUYAM6R13.jpg|mbed_fest|320}}\\
+mbedのユーザが一堂に会する**mbed祭り**が一年に数回，不定期に開催されています．\\
+mbedの最新情報や制作事例，実機デモ，さらに初めての人向けのハンズオン・コーナーもある，初心者からヘビーユーザまでをカバーする楽しいイベントです．
+
+[[https://mbed.doorkeeper.jp|**mbed祭りのコミュニティ・サイト**]]に登録しておけば，次回の**mbed祭り**の開催日時や参加申込開始の案内をいち早く受け取ることができます．\\
+是非このコミュニティに登録いただき，コミュニティの最新情報に触れてください．
+<</info>>
+
+
+
+
+
+
+
+
+
+
+<<comment>>
+==2.4 割り込み入力==
+
+mbedでは簡単に割り込みを使うことができます．\\
+上記「デジタル入力」で使用した回路をそのまま使って実験できます．\\
+
+ボタンが押されることによって変数：##count##がカウントアップされます．\\
+カウントアップによって，LED4→LED3→LED2→LED1のようにLEDの点灯が変化します．
+
+<<code>>
+#include "mbed.h"
+ 
+BusOut      myleds( LED4, LED3, LED2, LED1 );
+DigitalIn   mybutton( p5 );
+InterruptIn intrptbutton( p5 );
+ 
+int count   = 0;
+ 
+void count_up()
+{
+    count++;
+}
+ 
+int main()
+{
+    mybutton.mode( PullUp );
+ 
+    intrptbutton.rise( &count_up );
+ 
+    while(1) {
+        myleds  = 0x1 << (count & 0x3);
+        wait( 0.01 );
+    }
+}
+<</code>>
+\\
+
+<<program http://developer.mbed.org/users/okano/code/__InterruptIn_sample/>>
+
+\\
+\\
+
+==2.5 割り込み入力 (改良版)==
+
+上記の割り込み入力プログラムは問題があります．\\
+1回のスイッチの押し下げにもかかわらず，内部のカウントが数回行われてしまいます．\\
+
+これは機械式スイッチを使っているために発生する[[http://ja.wikipedia.org/wiki/%E3%83%81%E3%83%A3%E3%82%BF%E3%83%AA%E3%83%B3%E3%82%B0|チャタリング]]と呼ばれる現象によるものです．\\
+このような回路を使う場合は，ハードウェアやソフトウェアで回避策(デバウンス処理)が取られます([[https://developer.mbed.org/users/chris/notebook/switch-debouncing/|ソフトウェアでの回避策の例]])．\\
+ここではその一例として，デバウンスを行ってくれるライブラリを使ってみています．
+
+<<code>>
+#include "mbed.h"
+#include "PinDetect.h"
+ 
+BusOut      myleds( LED4, LED3, LED2, LED1 );
+PinDetect   intrptbutton( p5 );
+ 
+int count   = 0;
+ 
+void count_up()
+{
+    count++;
+}
+ 
+int main()
+{
+    intrptbutton.mode( PullUp );
+    intrptbutton.attach_asserted( &count_up );
+    intrptbutton.setSampleFrequency();
+ 
+    while(1) {
+        myleds  = 0x1 << (count & 0x3);
+        wait( 0.01 );
+    }
+}
+<</code>>
+\\
+
+<<program http://developer.mbed.org/users/okano/code/__InterruptIn_improved_sample/>>
+<</comment>>

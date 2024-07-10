@@ -1,0 +1,58 @@
+<p><img alt="" height="234" src="http://mbed.org/media/uploads/okano/multipoint_thermometer.jpg" width="320"></p> <p>You may find a USB cable on this picture but it is used for I2C signal to put the sensor_1 in the distance<br> Sensor_0 is placed on the board, behind the USB A-type connector.</p> <h2>What is this?</h2> <p>This is a demo program of thermometer.<br> It measures two points where the temperature sensor located.<br> Those data will be shown on a text LCD panel.</p> <p>This project has been made from two study projects (TempSensor_LM75B, TextLCD_SB1602E) using I2C devices.</p> <p><a class="mcenp" href="http://mbed.org/users/okano/notebook/lm75b-temperature-sensor-interface/" title="Notebook page: LM75B temperature sensor interface">LM75B temperature sensor interface</a></p> <p><a class="mcenp" href="http://mbed.org/users/okano/notebook/textlcd-sb1602e-sample-program/" title="Notebook page: TextLCD SB1602E sample program">TextLCD SB1602E sample program</a></p> <p>All these I2C devices share one I2C bus.</p> <p><img alt="" height="272" src="http://mbed.org/media/uploads/okano/sensors_and_lcd.png" width="615"></p> <h2>Code:</h2> <div><a class="mcepp" href="http://mbed.org/users/okano/programs/5ywgp" title="Published program: Multipoint_thermometer_TextLCD">Multipoint_thermometer_TextLCD</a></div> <p>The program code is very simple.<br> It just make temperature sensors and text LCD instances in the main module and read the temperature and print it to LCD.<br> The declaration of the I2C devices are done with arguments which is the pointer to the I2C bus. To define each devices shares same I2C bus.</p> <pre>#include "mbed.h"
+#include "TempSensor_LM75B.h"
+#include "TextLCD_SB1602E.h"
+
+Serial       pc(USBTX, USBRX);		// Set PC output
+
+I2C          i2c( p9, p10 );        // declare I2C
+
+TempSensor_LM75B    thermo_sensor_0( &amp;i2c );        //  sensor_0 using with default I2C address "0x90".
+TempSensor_LM75B    thermo_sensor_1( &amp;i2c, 0x92 );  //  sensor_1 gaved I2C address since that address pin A0=HIGH.
+TextLCD_SB1602E     lcd( &amp;i2c );					//	declare the TextLCD to output. 
+
+int main() {
+    float  t0;						//	variable to store temperature from sensor_0
+    float  t1;						//	variable to store temperature from sensor_1
+    int    i    = 0;	
+
+    while (1) {
+        t0    = thermo_sensor_0;	//	read out the sensor data
+        t1    = thermo_sensor_1;	//	read out the sensor data
+
+        pc.printf( "  (%d)  sensor_0= %4.1f\xDF,  sensor_1= %4.1f(degree-C)\n", i++, t0, t1 );	//	output to PC
+
+        lcd.printf( 0, "sensor0   %4.1f%cC\r", t0, 0xDF );	//	output to LCD (to upper line)
+        lcd.printf( 1, "sensor1   %4.1f%cC\r", t1, 0xDF );	//	output to LCD (to lower line)
+
+        wait( 1 );
+    }
+}</pre> <p>This project requires three header files those are defining classes.<br> "I2cBusDevice.h" is a generic class for I2C devices.<br> "TempSensor_L75B.h" is a derived class of I2cBusDevice.<br> "TextLCD_SB1602E.h" is a derived class of I2cBusDevice.</p> <h2>Note:</h2> <p>On these programs, expecting to use the pins 9 and 10 for I2C bus and these pins should be pulled-up properly.</p> <h2>Reference:</h2> <div><a class="mcenp" href="http://mbed.org/users/okano/notebook/lm75b-temperature-sensor-interface/" title="Notebook page: LM75B temperature sensor interface">LM75B temperature sensor interface</a></div> <p><a class="mcenp" href="http://mbed.org/users/okano/notebook/textlcd-sb1602e-sample-program/" title="Notebook page: TextLCD SB1602E sample program">TextLCD SB1602E sample program</a></p> <p> </p> <hr> <hr> <p><img alt="" height="234" src="http://mbed.org/media/uploads/okano/multipoint_thermometer.jpg" width="320"></p> <p>写真の例ではUSBケーブルを使用していますが，これは温度センサ(Sensor_1)へのI2C線を引き回すために使っています．<br> もう一方の温度センサ(Sensor_0)は，USB Aコネクタ裏側の基板上にあります．</p> <h2>これは？</h2> <p>温度計のデモプログラムです．<br> 2つの温度センサが置かれた各店の温度を測定します．<br> 測定したデータはキャラクタ液晶に表示されます．</p> <p>このプロジェクトは，デバイス操作の見本用プログラムを2つ組み合わせて作られました．</p> <p><a class="mcenp" href="http://mbed.org/users/okano/notebook/lm75b-temperature-sensor-interface/" title="Notebook page: LM75B temperature sensor interface">LM75B temperature sensor interface</a></p> <p><a class="mcenp" href="http://mbed.org/users/okano/notebook/textlcd-sb1602e-sample-program/" title="Notebook page: TextLCD SB1602E sample program">TextLCD SB1602E sample program</a></p> <p>これらのセンサ，液晶デバイスは1つのI2Cバス上に接続されます．</p> <p><img alt="" height="272" src="http://mbed.org/media/uploads/okano/sensors_and_lcd.png" width="615"></p> <h2>コード:</h2> <div><a class="mcepp" href="http://mbed.org/users/okano/programs/5ywgp" title="Published program: Multipoint_thermometer_TextLCD">Multipoint_thermometer_TextLCD</a></div> <p>このプログラムは非常にシンプルです．<br> メインモジュールで温度センサ(２個)とキャラクタ液晶のインスタンスが作られ，温度の読み出しと液晶への書き出しが行われます．<br> I2Cに接続されるデバイスの宣言をする際には，I2Cバス・インスタンスへのポインタを引数に与えます．これによりそれぞれのデバイスがひとつのI2Cバスに接続されていることを示します．</p> <pre>#include "mbed.h"
+#include "TempSensor_LM75B.h"
+#include "TextLCD_SB1602E.h"
+
+Serial       pc(USBTX, USBRX);		// PCへのシリアル出力を用意
+
+I2C          i2c( p9, p10 );        // I2Cを用意する
+
+TempSensor_LM75B    thermo_sensor_0( &amp;i2c );        //  sensor_0の宣言．I2Cアドレスはデフォルトの"0x90"になる
+TempSensor_LM75B    thermo_sensor_1( &amp;i2c, 0x92 );  //  sensor_0の宣言．デバイスのアドレスピンで設定したI2Cアドレスを与える
+TextLCD_SB1602E     lcd( &amp;i2c );					//	キャラクタ液晶を用意する 
+
+int main() {
+    float  t0;						//	sensor_0からの温度データ格納用変数
+    float  t1;						//	sensor_1からの温度データ格納用変数
+    int    i    = 0;	
+
+    while (1) {
+        t0    = thermo_sensor_0;	//	センサのデータを読み出し
+        t1    = thermo_sensor_1;	//	センサのデータを読み出し
+
+        pc.printf( "  (%d)  sensor_0= %4.1f\xDF,  sensor_1= %4.1f(degree-C)\n", i++, t0, t1 );	//	PCへの出力
+
+        lcd.printf( 0, "sensor0   %4.1f%cC\r", t0, 0xDF );	//	LCDへの出力 (上側の行へ)
+        lcd.printf( 1, "sensor1   %4.1f%cC\r", t1, 0xDF );	//	LCDへの出力 (下側の行へ)
+
+        wait( 1 );
+    }
+}
+</pre> <p>このプロジェクト(プログラム)には3つのヘッダファイルが必要です．</p> <p>「I2cBusDevice.h」はI2Cデバイスのベースクラスとして，「TempSensor_L75B.h」と「TextLCD_SB1602E.h」はそこからの派生クラスとして使われます．</p> <h2>注意:</h2> <p>このサンプルプログラムではI2Cバスにmbedの9ピンと10ピンを使います．これらのピンは適切にプルアップされてなくてはなりません．</p> <h2>参考:</h2> <p><a class="mcenp" href="http://mbed.org/users/okano/notebook/lm75b-temperature-sensor-interface/" title="Notebook page: LM75B temperature sensor interface">LM75B temperature sensor interface</a></p> <p><a class="mcenp" href="http://mbed.org/users/okano/notebook/textlcd-sb1602e-sample-program/" title="Notebook page: TextLCD SB1602E sample program">TextLCD SB1602E sample program</a></p>

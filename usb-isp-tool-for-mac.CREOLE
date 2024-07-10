@@ -1,0 +1,186 @@
+=USB-ISP tool for Mac=
+
+<<info>>
+Japanese version available in lower half of this page.\\
+このページの後半に日本語版が用意されています．
+<</info>>
+
+== What is this? ==
+
+I made a very simple app (droplet) for binary copying into flash through USB-ISP.\\
+This app solves a problem on ISP-ing on Mac :)
+
+== Problem ==
+
+Some of USB enabled devices from NXP (like LPC11Uxx, LPC134x, LPC154x etc) are supporting ISP (In-System Programming) via USB. The ISP is a mechanism to write a binary file into internal flash.\\
+When the target MCU is booted in ISP with USB connection, the MCU is appeared as USB storage device: "CRP DISABLED" on PC and the binary can be written by just copying the file. 
+This is very simple and easy way to program those MCUs but bit troublesome on Mac, unfortunately.\\
+The drag-and-drop file copying on Mac (on Finder.app) does put some side information about the file. That makes corruption on the target disk. \\
+
+{{/media/uploads/okano/usb_isp_cannot_dnd.png}}
+
+== Solution 1 ==
+
+To avoid this problem, user can use Terminal commands. 
+
+<<code example_of_the_Terminal_operation>>
+% rm /Volumes/CRP\ DISABLD/firmware.bin                       
+% cp /Users/tedd/Downloads/mbed_blinky_11U35_501_LPC11U35_501.bin /Volumes/CRP\ DISABLD/
+% diskutil unmount /Volumes/CRP\ DISABLD/                     
+Volume CRP DISABLD on disk6 unmounted
+%
+<</code>>
+
+This works perfectly but I don't like this. I was getting mad by typing the commands again and again.
+
+== Solution 2 ==
+
+**USB-ISP.app** executes all terminal commands instead of you.\\
+The source binary file name is geven by drag-and-drop in to this app. When this app get the file, it will overwrites old binary in target MCU. \\
+When the writing completed, the ISP target will be unmounted. 
+
+{{/media/uploads/okano/usb_isp_dnd_with_app.png}}
+
+== How to use ==
+
+So, with USB-ISP.app, all you need to do is..
+# Put the target board into ISP mode. Confirm a drive which has name of "CRP DISABLD" is mounted
+# Drag-and-drop a binary file into USB-ISP.app
+# The drive is unmounted when the binary copy has been done successfully
+# Reset the target and see the new program running
+
+If there is an error, a dialog box will come to let you fix it. 
+
+== Download / Code ==
+
+<<warning title="Download">>
+The binary is available here. Unzip and copy on anywhere you want to put.\\
+**Please use this app at your own risk.**\\
+This program is distributed under Apache-2.0 license\\
+
+ [[/media/uploads/okano/usb-isp.app.zip]] 
+<</warning>>
+
+<<code USB-ISP.app(applescript)>>
+(*
+ *  Simple USB-ISP flash writer for Mac
+ *  June-2014, tedd
+ *
+ * this program is distributed under Apache-2.0 license
+ *   http://opensource.org/licenses/Apache-2.0
+ *)
+
+on open newFile
+	set targetPath to "/Volumes/CRP\\ DISABLD/" -- target volume
+	set deleteFilename to "firmware.bin" -- delete this file before copying new file
+	set action1 to "rm " & targetPath & deleteFilename & ";" -- delete command
+	set action3 to "sync;diskutil unmount " & targetPath & ";" & "exit;" -- unmount
+	
+	set newFileName to POSIX path of newFile -- get the file name and path in PSIX format
+	set action2 to "cp " & newFileName & " " & targetPath & ";" -- copy command
+	set comm to action1 & action2 & action3 -- concatinate all commands in a string
+	
+	do shell script comm -- execute all commands on a shell
+end open
+<</code>>
+
+=== Customize / Modification ===
+
+If you need customize the script, you can do it on your Mac.\\
+Just drag&drop the droplet into "Script Editor.app". You can edit the code and save to create new app :)\\
+
+{{/media/uploads/okano/editing_script_by_scripteditor_isp.png}}
+
+
+\\
+\\
+----
+\\
+\\
+=Mac用USB-ISPツール=
+
+==これはなに？==
+
+とても簡単ですがUSB-ISPを使ってバイナリをフラッシュにコピーするツールを作ったので置いておきます．
+このアプリはMacでISPする時の問題を解決します (^^)
+
+==問題==
+
+USBポートのあるNXPのマイコンの幾つかは，USB経由のISP(--イカ醤油ポッポ焼き-- In-System Programming)をサポートしています．「ISP」はバイナリファイルをマイコン内部のフラッシュに書き込むひとつの方法です．\\
+MCUをUSBに接続した状態でISPモードで立ち上げると，「CRP DISABLED」という名前のUSBストレージとしてPC上に現れ，バイナリは単にそれへのファイルコピーで書き込むことができます．\\
+これはマイコンへの書き込みを行うとても簡単な方法ですが，Macで行うには問題があります．\\
+Mac上でドラッグ・アンド・ドロップによるファイルのコピーを行うと，ファイルだけでなくその付帯情報も一緒に書き込まれます．この余分な情報がターゲット側で問題となります．\\
+
+{{/media/uploads/okano/usb_isp_cannot_dnd.png}}
+
+==解決策1==
+
+この問題は「ターミナル・コマンド」を使うことで回避できます．
+
+<<code example_of_the_Terminal_operation>>
+% rm /Volumes/CRP\ DISABLD/firmware.bin                       
+% cp /Users/tedd/Downloads/mbed_blinky_11U35_501_LPC11U35_501.bin /Volumes/CRP\ DISABLD/
+% diskutil unmount /Volumes/CRP\ DISABLD/                     
+Volume CRP DISABLD on disk6 unmounted
+%
+<</code>>
+
+これは完璧に動くのですが，これらのコマンドを繰り返し繰り返し打つのはあまりに面倒です．
+
+==解決策2==
+
+「USB-ISP.app」は，あなたの代わりにこのコマンドを実行してくれます．\\
+コピー元ファイルの名前はこのアプリケーションにドラッグ・アンド・ドロップで知らせてやります．アプリケーションはファイルが来るとターゲットマイコンを上書きします．\\
+書き込みが終わるとターゲットをアンマウントして終了します．\\
+
+{{/media/uploads/okano/usb_isp_dnd_with_app.png}}
+
+== どう使うの？ ==
+
+このUSB-ISP.appを使えば，やることはたったこれだけです．\\
+#ターゲット基板をISPモードに入れて，「CRP DISABLED」という名前のUSBストレージがマウントされるのを確認する
+#バイナリファイルをUSB-ISPにドラッグ・アンド・ドロップ
+#書き込みが無事に完了すると，ストレージはアンマウントされます．
+#ターゲットをリセットして，新しいプログラムの動作を確認
+
+もしエラーが発生した場合には，ダイアログボックス(ウィンドウ)が開いてそれを通知します．
+
+== ダウンロード / コード ==
+
+<<warning title="Download">>
+そのまま使える.appファイルをここに置いておきます．zipを解凍して好きなところに保存して下さい．\\
+**このアプリケーションは，ユーザ自身の判断と責任で使用してください．**\\
+このプログラムはApache-2.0ライセンス下で配布されています\\
+
+ [[/media/uploads/okano/usb-isp.app.zip]] 
+<</warning>>
+
+<<code USB-ISP.app(applescript)>>
+(*
+ *  Simple USB-ISP flash writer for Mac
+ *  June-2014, tedd
+ *
+ * this program is distributed under Apache-2.0 license
+ *   http://opensource.org/licenses/Apache-2.0
+ *)
+
+on open newFile
+	set targetPath to "/Volumes/CRP\\ DISABLD/" -- target volume
+	set deleteFilename to "firmware.bin" -- delete this file before copying new file
+	set action1 to "rm " & targetPath & deleteFilename & ";" -- delete command
+	set action3 to "sync;diskutil unmount " & targetPath & ";" & "exit;" -- unmount
+	
+	set newFileName to POSIX path of newFile -- get the file name and path in PSIX format
+	set action2 to "cp " & newFileName & " " & targetPath & ";" -- copy command
+	set comm to action1 & action2 & action3 -- concatinate all commands in a string
+	
+	do shell script comm -- execute all commands on a shell
+end open
+<</code>>
+
+=== カスタマイズ / 改造 ===
+
+スクリプトの改造が必要な場合はMac上で簡単に変更できます．\\
+このドロップレットを「スクリプトエディタ.app」にドラッグ・アンド・ドロップするだけ．エディタが開くので，これを編集して保存しなおせば新しいappの出来上がりです (^ ^)\\
+
+{{/media/uploads/okano/editing_script_by_scripteditor_isp.png}}

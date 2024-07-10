@@ -1,0 +1,341 @@
+[[http://www.adventar.org/calendars/523|mbed Advent Calendar 2014]]に何か書いてみないかとの呼びかけに，自分にとってちょっと特別な日を選んで書いてみることにしました．参加を表明したのは11月．まだまだ先のことで余裕だと考えていたのですが，あれよあれよという間に自分の番が回ってきてしまいました．\\
+当初「裏ワザ」について書くと宣言してたのですが，そんなに大した裏情報を持ってるわけでもなく，ちょっとした「小ネタ」をまとめる感じになってしまいました (^ ^;
+
+* あ，ところで，いま上に書いた顔文字は目と目の間にスペースが入れてあります．「^」を続けて書くとWikiの"上付き文字"として認識されてしまうので表示がおかしくなります．ちなみにnotebookページやQ&Aやフォーラムのページの書き込みでは，すべてこのWikiフォーマットを使って編集することができます．\\
+これを使えばコード例の引用や，文字の強調が簡単にできます．\\
+Wikiについては，書き込みを行う時に出てくる編集欄の下に表示される「Editing tips」リンクをクリック→その解説が出てきます．より詳しい情報は[[https://developer.mbed.org/cookbook/Wiki-Syntax|こちら]]
+
+=0. mbedに触れずにmbedをリセットする=
+
+mbedにコピーしたバイナリを実行させるには一旦mbedをリセットします．これ，フツーはmbedの基板上にあるリセットボタンを押すことで行いますが，「mbedがちょっと遠いところに置いてある」なんて場合に，毎回手を伸ばすのは不便です．\\
+そういうときはターミナルを開いておいて，そこからmbedに「ブレーク信号」を送ることでリセットができます．\\
+
+* Windows上のTeratermなら [Alt] + [b] (Altとbのキーの同時押し)でブレーク信号を送信できます．
+* Macのターミナルでは.. まず [Ctrl] + [a] を押してから次に [Ctrl] + [b] を押します．
+* 参考
+** http://developer.mbed.org/forum/mbed/topic/295/?page=1#comment-1435
+** http://juxed.blogspot.jp/2013/05/cisco-ios-break-sequence-on-mac-os-x.html
+** [[http://developer.mbed.org/users/okano/notebook/personal_memo--usb-serial_IO/|mbedのUSBシリアル機能を使う]]
+
+=1. mbedに書き込めなくなったら=
+
+最近は様々なプラットフォームが出ていて，mbedを使う際のハードの選択肢も増えました．\\
+しかし依然，オリジナルの**青と黄のmbedは他にない特徴があり便利**です．\\
+**この便利な点のひとつにPCとmbed本体の両方からアクセスできる2MBのストレージがある**のですが，使っているうちに(使い方にもよりますが)不可視ファイルが溜まってしまったり，稀にファイルシステムがおかしくなり書き込みができなくなったりします．\\
+実際にこのような状態になったのを見て「壊れた」と思われる事もあるようです．
+
+書き込みができなくなってしまったら..\\
+mbed(mbedストレージ)をPCからフォーマットしてみましょう．ストレージの中身をフォーマットで消してしまえば(上記のような原因で書き込みができなくなっていたのだとすれば)元通りになります．\\
+最初から入っている「MBED.HTM」ファイルも電源を再投入(USBを接続し直す)すれば復活します．\\
+<<info>>
+ちなみにMacの場合，最近のOSではmbedをフォーマットし始めると，フォーマットが30%ぐらい進んだところで処理が止まってしまい先に進みません．このような状態の時はいくら待ってもしょうがないので，少々荒っぽいですがmbedをUSBから抜いてしまいます．「フォーマットできなかった」旨のメッセージが現れますが，再接続すると使えるようになります．**←これを試される場合は自己責任でお願いします**)
+<</info>>
+
+青黄以外のmbedで書き込みができなくなった場合は，mbedインターフェースチップのファームウェアの更新を試してみましょう．
+
+=2. 取ったデータをすぐにグラフに=
+
+青と黄のmbed限定ネタです．\\
+PCとmbedの両方からアクセスできるストレージを使えば「取ったデータをすぐにグラフ化する」なんてことも簡単にできます．\\
+たとえばmbedに接続したセンサやアナログ入力の値をCSVフォーマットで「◯◯◯.csv」のような名前のファイルに保存し，それをPCの表計算ソフトで開いてグラフを描かせます．\\
+{{http://mbed.org/media/uploads/nxpfan/csv_in_storage.png|storage|400}}\\
+{{http://developer.mbed.org/media/uploads/nxpfan/graph_by_numbers.png|worksheet|400}}\\
+この詳しい方法は[[http://developer.mbed.org/users/nxpfan/notebook/lets_get_started_jp_omake/|こちら]]\\
+
+=3. I/Oポートを使う上でのいろいろ=
+
+デジタル信号の入出力を簡単に行えるDigitalOut，DigitalIn，DigitalInOutですがいくつかのオプションが用意されています．
+
+==3.1 Pullup/PullDown==
+
+DigitalInとDigitalInOutでは**マイコンチップ内蔵のプルアップ抵抗やプルダウン抵抗を使うことができます**．\\
+またDigitalInOutでは出力をオープンドレインに設定することも可能です．\\
+
+内蔵プルアップ/プルダウンは{{{mode()}}}関数で設定できます．\\
+たとえばユーザの入力を得るために外付けにスイッチをつけたり，他のチップのオープンドレイン出力となっている割込み信号を受けるような場合に便利です．
+
+<<code>>
+#include "mbed.h"
+
+DigitalIn   in( p20 );
+DigitalOut  led1(LED1);
+DigitalOut  led2(LED2);
+
+int main() {
+    
+    in.mode( PullUp );    //  内蔵プルアップを使う
+//    in.mode( PullDown );    /  内蔵プルダウンを使う
+    
+    while(1) {
+        led1    = in;  //  入力ピンの状態を読み込む
+        led2    = in;  //  入力ピンの状態を読み込む
+        wait(0.2);
+        led1    = 0;  //  入力ピンが1なら，これにより1と0を繰り返すのでLED1が点滅
+        led2    = 1;  //  入力ピンが0なら，これにより0と1を繰り返すのでLED2が点滅
+        wait(0.2);
+    }
+}
+<</code>>
+上のコードはプルアップとプルダウンを行った結果を確認するコードです．
+
+参考:
+[[http://developer.mbed.org/users/mbed_official/code/mbed/docs/4fc01daae5a5/classmbed_1_1DigitalInOut.html#a12ffae4af877bdcd41ad2fc6a0a444ad|DigitalInOutのmode()関数についての解説ページ]]
+
+==3.2 I/Oをまとめて使う==
+
+===3.2.1 配列を使う===
+
+複数のI/Oはまとめて使えると便利です．\\
+たとえば4本のDigitalOutは，次のように宣言すれば配列として使えます．\\
+
+<<code>>
+#include "mbed.h"
+
+DigitalOut  leds[]  = {  //  配列を用意します
+    DigitalOut( LED4 ),  //  配列の1番目の要素をLED4で初期化したDigitalOutに
+    DigitalOut( LED3 ),  //  ..
+    DigitalOut( LED2 ),  //  ..
+    DigitalOut( LED1 )   //  ..
+};
+
+int main()
+{
+    int count   = 0;
+
+    while(1) {
+        for ( int i = 0; i < 4; i++ ) {
+            leds[ i ]   = (count >> i) & 0x1;  //  変数 count の値をLED4〜LED1に表示(二進値)
+        }
+        wait( 0.2 );
+        count++;
+    }
+}
+<</code>>
+
+この方法はあらゆるクラスに応用可能です．たとえば同型の外付けチップを複数使う時も，それぞれのインスタンスを配列にまとめて使うことが可能になります．
+
+<<code>>
+#include "mbed.h"
+#include "LM75B.h"  //  Library : http://developer.mbed.org/users/neilt6/code/LM75B/
+
+#define N_OF_SENSORS    5  //  センサを5個使う
+
+LM75B   sensor[ N_OF_SENSORS ]  = {  //  各センサのインスタンスを配列として用意
+    LM75B( p28, p27, LM75B::ADDRESS_0 ),  //  配列の1番目の要素をはp28，p27に繋がれたアドレス= ADDRESS_0のデバイスに
+    LM75B( p28, p27, LM75B::ADDRESS_1 ),  //  ..
+    LM75B( p28, p27, LM75B::ADDRESS_2 ),  //  ..
+    LM75B( p28, p27, LM75B::ADDRESS_3 ),  //  ..
+    LM75B( p28, p27, LM75B::ADDRESS_4 )   //  ..
+};
+
+int main()
+{
+    while(1) {
+        for ( int i = 0; i < N_OF_SENSORS; i++ ) {
+            printf( "sensor%d = %.3fdeg-C\r\n", i, (float)sensor[ i ] );  //  ループが回るたびにそれぞれのセンサへのアクセスが行われる
+        }
+        wait( 1 );
+    }
+}
+<</code>>
+//I^^2^^C接続の温度センサ：LM75Bを5個つなげて，それぞれの値を読み込む例//
+
+===3.2.2 BusOut，BusIn，BusInOutを使う===
+
+DigitalOut，DigitalIn，DigitalInOutはI/Oピンをまとめて使うことができます．それぞれBusOut，BusIn，BusInOutがそれに相当します．
+
+<<code>>
+#include "mbed.h"
+
+BusOut  leds( LED4, LED3, LED2, LED1 );  //  LED4〜LED1をまとめてインスタンスとする
+
+int main() {
+    int count   = 0;
+
+    while(1) {
+        leds    = count++;  //  変数 count の値をLEDに表示(そのまま代入できます)
+        wait(0.2);
+    }
+}
+<</code>>
+
+===3.2.3 PortOut，PortIn，PortInOutを使う===
+
+BusOut，BusIn，BusInOutは実行時のオーバーヘッドが大きいため，比較的低速です．\\
+これに代わり，**より高速でI/Oを操作可能なPortOut，PortIn，PortInOut**が用意されています．
+
+しかしこのPortOutシリーズは，よりハードに近いインターフェースとなっていて，各ピンと内部レジスタの対応がわかっていることが前提になっています．\\
+**マイコンチップ毎に違うレジスタを意識しなければならないため，もはやハードウェアの抽象化ができないインターフェース**となっています．これを使う場合には，特定のプラットフォームでの使用に限定されてしまうことに注意しなければなりません．\\
+http://developer.mbed.org/handbook/PortOut
+
+==3.3 I/Oの高速化==
+
+たとえばmbed LPC1768ではデジタルI/Oピンは96MHzで動作するCPUに直結されているため，CPUのサイクルごとにHIGH/LOWを切り替えることができます．96MHzの1周期分でHIGH，次の周期分でLOWを出すようにすれば最高で48MHzのHIGH/LOW信号を出すことが可能です．\\
+これを行うにはI/Oレジスタへの直接アクセスが必要になります．\\
+
+たとえば外部パラレルバスなどをI/Oピンで作り出すような場合には，このような方法が有効でしょう．\\
+
+次の例はアドレス8ビット，データ8ビットのパラレルバスをmbed LPC1768で実現してみた例です．\\
+コード中に{{{LPC_GPIO2->FIOCLR   = 0x30; //  to keep timing}}}のような，連続して何度も同じレジスタに同じ値を書き込んでいるところがありますが，これは本来{{{_nop();}}}と書けばいいところを，その方法を知らなかったために，単にCPUサイクルを消費するために設けた部分でした (^ ^;\\
+(パラレルバスに接続したターゲットが必要とするタイミングに合わせるために，このようなコードとなってしまいました)
+
+<<program http://developer.mbed.org/users/nxp_ip/code/parallel_bus/>>
+
+使い方やピン配置などの詳細は[[http://developer.mbed.org/users/nxp_ip/notebook/parallel-bus-access/|こちら]]を御覧ください．
+
+<<code>>
+//  GPIO port setting
+ 
+#define     ADDR_MASK       0x07878000  //  8 bit address mask on PORT0: Address value will be set into this bit position
+#define     DATA_MASK       0x00000FF0  //  8 bit data mask on PORT0: Data value will be appeared on this bit position
+#define     CONTROL_MASK    0x00000038  //  Control signals CS=bit5(pin21), WR=bit4(pin22), RD=bit3(pin23)
+ 
+PortOut     addr_port( Port0, ADDR_MASK );
+PortInOut   data_port( Port0, DATA_MASK );
+PortOut     ctrl_port( Port2, CONTROL_MASK );
+ 
+//  Next two macros defines interface for temporaly interrupt disable/enable functions.
+//  These macros are used to blocking interrupt until a bus access cycle completed.
+//  Because if the interrupt happened in a cycle, the emulated parallel port state will be disturbed.
+//  For the mbed, library routine: __disable_irq() / __enable_irq() can be used.
+ 
+#define     interrupt_enable()    __enable_irq()
+#define     interrupt_disable()   __disable_irq()
+ 
+//  Hardware initialize: it defines initial state of the (emulated) parallel bus
+ 
+void hardware_initialize( void ) {
+    prev_access_was_write   = 0;
+    ctrl_port               = 0x38;     //  CS, WR and RD are deaserted (HIGH)
+    data_port.input();                  //  data bus set to Hi-Z
+    reset_port.output();
+    reset_port.mode( PullUp );
+}
+ 
+//  Single write cycle on (emulated) parallel bus
+ 
+void write_data( char addr, char data ) {
+    unsigned long   addr_data;
+ 
+    interrupt_disable();    //  disable interrupt first
+ 
+    addr_data   = (addr << 19) | (addr << 15) | (data << 4);
+ 
+    LPC_GPIO0->FIOMASK  = ~(ADDR_MASK | DATA_MASK);
+    LPC_GPIO0->FIODIR   = ADDR_MASK;
+    LPC_GPIO0->FIOSET   = addr_data;
+    LPC_GPIO0->FIOCLR   = ~addr_data;
+ 
+    LPC_GPIO2->FIOCLR   = 0x20; //  Assert CS signal
+ 
+    LPC_GPIO0->FIODIR   = ADDR_MASK | DATA_MASK;
+ 
+    LPC_GPIO2->FIOCLR   = 0x30; //  repeating register write to keep pulse width wide :)
+ 
+    LPC_GPIO0->FIOSET   = addr_data;
+    LPC_GPIO0->FIOCLR   = ~addr_data;
+ 
+    LPC_GPIO2->FIOCLR   = 0x30; //  to keep timing
+    LPC_GPIO2->FIOCLR   = 0x30; //  to keep timing
+    LPC_GPIO2->FIOCLR   = 0x30; //  to keep timing
+    LPC_GPIO2->FIOCLR   = 0x30; //  to keep timing
+    LPC_GPIO2->FIOSET   = 0x38;
+ 
+    LPC_GPIO0->FIODIR   = ADDR_MASK;
+ 
+    interrupt_enable();    //  enable interrupt again
+}
+ 
+char read_data( char addr ) {
+    unsigned long   addr_data;
+    volatile char   tmp;
+ 
+    interrupt_disable();    //  disable interrupt first
+ 
+    LPC_GPIO0->FIODIR   = ADDR_MASK;
+ 
+    LPC_GPIO0->FIOMASK   = ~ADDR_MASK;
+    addr_data   = (addr << 19) | (addr << 15);
+    LPC_GPIO0->FIOSET   = addr_data;
+    LPC_GPIO0->FIOCLR   = ~addr_data;
+ 
+    LPC_GPIO2->FIOCLR   = 0x28; //  Assert CS and RD signals
+    LPC_GPIO2->FIOCLR   = 0x28; //  to keep timing
+    LPC_GPIO2->FIOCLR   = 0x28; //  to keep timing
+    LPC_GPIO2->FIOCLR   = 0x28; //  to keep timing
+    LPC_GPIO2->FIOCLR   = 0x28; //  to keep timing
+    LPC_GPIO2->FIOCLR   = 0x28; //  to keep timing
+ 
+    LPC_GPIO0->FIOMASK  = ~DATA_MASK;
+    tmp                 = (LPC_GPIO0->FIOPIN >> 4) & 0xFF;      //  Read data bus into var
+ 
+    LPC_GPIO2->FIOSET   = 0x38;
+ 
+    interrupt_enable();    //  enable interrupt again
+ 
+    return ( tmp );
+}
+<</code>>
+
+=4. レジスタ・アクセス，特定アドレスへのアクセス=
+
+すでに上の3.3節で例を示しましたが，mbedの開発環境ではハードウェアのアクセスはSDKを介さずに行うことができます．
+
+MCU内蔵の各レジスタはCMSISと呼ばれる定義(レイヤ)を介してアクセスすることができます．各レジスタの定義は[[http://www.keil.com/dd/docs/arm/nxp/lpc17xx/lpc17xx.h|こちらのページ(LPC1768の例)]]などで確認することができます．\\
+これを使えば，MCUのクロックを変更するなどの操作も可能です．
+<<program http://developer.mbed.org/users/simon/code/PLL/>>
+
+もちろん特定のアドレスに直接アクセスすることも可能です．レジスタをアドレスで直接参照したい時，メモリの特定部分にアクセスしたい時などは下のような感じの，フツーにC言語で直接アドレスを指定してアクセスする方法が使えます．
+<<code>>
+*(volatile int *)0x400FC10C  = 0xFF;  //  アドレス0x400FC10Cに値を代入
+printf( "data in 0x400FC10C is 0x%08X\n", *(volatile int *)0x400FC10C );  //  アドレス0x400FC10Cの値を表示
+<</code>>
+
+<<warning "追記">>
+このページを公開後，雪だるまさんからご指摘を頂きました．\\
+「[[https://twitter.com/toyowata/status/546504233999024128|「レジスタ・アクセス、特定アドレスへのアクセス」で宣言にvolatileを付けないとループ内で使ったときに最適化でアクセスが一回しか発生しないコードが出るかもしれない]]」とのこと．正にその通りです．\\
+コード例を訂正しました．
+
+* 参考：[[http://www.uquest.co.jp/embedded/learning/lecture18.html|コードが消える？ -最適化の罠- (学校では教えてくれないこと - ユークエスト株式会社)]]
+<</warning>>
+
+=5. ピンが足らない=
+
+青mbedのメインチップは100ピンのLPC1768なのですが，これを40ピンのモジュール基板とするために，いくつかのピンが接続されていません．\\
+たとえば汎用デジタル入出力ピンが足らないとか，I^^2^^Cやシリアルがもう一系統欲しいということがあります．\\
+
+こういう時にはLPCXpresso LPC1769が便利です．青mbedと同じ配列のピンに加え，33本の信号が引き出せるようになっています．この基板ではこれらのピンを有効に使うことができます ([[http://www.embeddedartists.com/sites/default/files/docs/schematics/LPCXpressoLPC1769revB.pdf|回路図(PDFファイル)]]の最後のページ参照)．
+
+mbed-SDKでこの基板を使う場合には，ターゲットを「mbed LPC1768 (青mbed)」としておけば問題ありません．このLPCXpressoに搭載されているマイコン：LPC1769は，LPC1768の動作クロック範囲を拡張しただけのチップです．このため，同じ実行コードで動作します．\\
+また，昔はEthernet部分のハードウェアが違うためネットワーク機能に互換性がありませんでした．しかし後にmbed-SDKのEthernetライブラリが更新され，現在ではmbed-LPC1768とLPCXpresso-LPC1769の両方で，共通の実行コードが使えるようになっています．
+
+ちなみにLPCXpresso LPC1769は120MHzのチップを搭載した基板として販売されていますが，mbedのコードを実行すると96MHzで動作します．これをフルの120MHzで使おうとする場合には内部PLLの設定が必要になります．\\
+
+ところでmbedでは{{{DigitalOut myout(p20)}}}のようにピンを指定しますが，たとえば[[http://www.embeddedartists.com/sites/default/files/docs/schematics/LPCXpressoLPC1769revB.pdf|回路図]]の「P0[2]」のようなピンはどう宣言すれば良いのでしょうか？\\
+このような時には[[http://developer.mbed.org/users/mbed_official/code/mbed-src/file/8a0b45cd594f/targets/hal/TARGET_NXP/TARGET_LPC176X/TARGET_MBED_LPC1768/PinNames.h|ここ]]が参考になるでしょう．ピン名がどのように宣言されているかがわかります．\\
+先程の例で言うと，P0[2]をデジタル出力で使う場合には{{{DigitalOut myout(P0_2)}}}のような宣言で使えることがわかります．
+
+<<info>>
+I^^2^^CやSerialも同様に{{{P0_2}}}のような端子指定で使えるはずです．\\
+この記事を公開するまでに一度実験して確かめておかないといけないと思ってたのですが，時間切れとなってしまいました．\\
+{{{Serial serial(P0_2, P0_3)}}}や{{{I2C i2c(P0_27, P0_28)}}}のような宣言で使うことができるはずです．
+<</info>>
+
+<<info>>
+mbedオンラインコンパイラで作成した実行コードは，LPC-Linkを介してLPCXpresso IDEから，あるいはシリアルインターフェースを介して内蔵フラッシュに書き込み事ができます．
+
+シリアルインターフェースでの書き込みはFlashMagic，lpc21ispなどのアプリケーションとUSB-シリアル変換ケーブルや，[[http://developer.mbed.org/users/okano/code/ika_shouyu_poppoyaki/|イカ醤油ポッポ焼き]]で行うことができます．
+<</info>>
+
+=6. さらに=
+
+あまり纏まりなくいろいろ書いてみました．書いていくうちに「あれもこれも」となってしまい，どんどん膨らんでいってしまいました．\\
+締め切りがなければ公開できなかったかもしれません．\\
+
+最後にとても有用なページを紹介．
+* 菅工房さんの[[https://developer.mbed.org/users/okini3939/notebook/mbed256/|MBEDを256倍使うための頁]]は必ず読んでおいたほうが良いページです．多くの日本語情報へのリンクが網羅されています．
+
+----
+
+私が担当する今日の分はこれでオシマイ．\\
+[[http://www.adventar.org/users/6142|明日]]は[[http://developer.mbed.org/users/ytsuboi/|TSUBOI]]さんが書いてくださいます〜（´(ｪ)｀）

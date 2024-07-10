@@ -1,0 +1,125 @@
+<br />
+<table border="1"> <tbody> <tr> <td align="left" style="background-color: #ffdddd;">
+This page has links to old program.<br/>
+Please find latest version of the PCF2127A demo code on <a href="http://developer.mbed.org/components/PCF2127-High-accuracy-RTC-module/">the components page</a>.
+</td> 
+<td align="left" style="background-color: #ffcccc;">
+このページには古いプログラムへのリンクが貼られています．<br />
+最新版は <a href="http://developer.mbed.org/components/PCF2127-High-accuracy-RTC-module/">コンポーネンツ・ページ</a>を御覧ください.
+</td> </tr> </tbody> </table>
+<br />
+<table border="1"> <tbody> <tr> <td>このページは日本語でも記載されています．<a href="#japanese">日本語版はこのページ後半</a>をご覧ください．</td> <td>This page is written in Japanese as well. Please find it in <a href="#japanese">2nd half of this page</a>.</td> </tr> </tbody> </table> <h1>What is this?</h1> <p>This is a sample/demo code for NXP PCF2127A real time clock (RTC) chip.</p> <p><img alt="" height="252" src="http://mbed.org/media/uploads/okano/dsc_8023s.jpg" width="484"></p> <p>Of course, since the mbed/LPC1768 has an internal RTC which works ultra low power consumption, you dont need to use such external RTC chip basically.</p> <p>But if you need the RTC with very high accuracy or external WDT, the PCF2127A may be a good option for the system.</p> <p>This sample/demo code just initilalize the RTC registers if it is not set properly and shows the date and time on the TextLCD screen which read from the chip.</p> <h1>Code:</h1>
+
+<table border="1"> <tbody> <tr> <td align="left" style="background-color: #ffcccc;">
+Following is a link to old program.<br/>
+Please find latest version of the PCF2127A demo code on <a href="http://developer.mbed.org/components/PCF2127-High-accuracy-RTC-module/">the components page</a>.
+</td> </tr> </tbody> </table>
+
+ <p><a class="mcepp" href="http://mbed.org/users/okano/programs/NXP_PCF2127A/5zrvu" title="Published program: NXP_PCF2127A">NXP_PCF2127A</a></p> <p>It uses an interrupt to update the information on the TextLCD screen. The RTC chip is set to generate periodical interrupt every seconds.</p> <p>mbed gets the interrupt on pin8. When the interrupt comes, mbed read the RTC registers and those will be shown on the TextLCD.</p> <pre>#include "mbed.h"
+#include "TextLCD.h"
+#include "NXP_PCF2127A.h"
+
+TextLCD         lcd(p24, p25, p26, p27, p28, p29, p30); // rs, rw, e, d0, d1, d2, d3
+NXP_PCF2127A    rtc( p9, p10 );
+InterruptIn     intr( p8 );
+
+void time_intr( void );
+
+int main() {
+    printf( "--- PCF2127 demo started.\r\n" );
+
+    if ( rtc.is_init_required() ) {
+        lcd.locate( 0, 0 );
+        lcd.printf( "please set time from terminal" );
+        rtc.set_time();
+        lcd.cls();
+    }
+
+    intr.fall( &amp;time_intr );
+
+    while ( 1 )
+        ;
+}
+
+
+void time_intr( void ) {
+    struct tm   dt, *dtp;
+    time_t      t;
+    char        s[ 30 ];
+    dtp = &amp;dt;
+
+    rtc.clear_intr();
+
+    t       = rtc.time( NULL );
+    dtp     = localtime( &amp;t );
+
+    strftime( s, 30, "%H:%M:%S, %Y/%b/%d %a", dtp );
+    printf( "%s\r\n", s );
+
+    strftime( s, 20, "%H:%M:%S PCF2127", dtp );
+    lcd.locate( 0, 0 );
+    lcd.printf( "%s", s );
+
+    strftime( s, 20, "%Y/%b/%d(%a)", dtp );
+    lcd.locate( 0, 1 );
+    lcd.printf( "%s", s );
+}</pre> <h1><img alt="" height="313" src="http://mbed.org/media/uploads/okano/pcf2712a.png" width="597"></h1> <h1>Note:</h1> <p>The I2C bus and the interrupt lines should be pulled-up properly since those signals are open-drain.</p> <h1>Reference:</h1> <p>PCF2127A datasheet: <a href="http://www.nxp.com/pip/PCF2127A_2.html">http://www.nxp.com/pip/PCF2127A_2.html</a></p> <p>Realtime clock usage: <a href="http://mbed.org/users/roen/notebook/real-time/">http://mbed.org/users/roen/notebook/real-time/</a></p> <hr> <hr> <p><a name="japanese"></a></p>
+
+ <h1>これは何？</h1> <p>NXPのリアルタイム・クロック(RTC)チップ，PCF2127Aのサンプル/デモコードです．</p> <p><img alt="" height="252" src="http://mbed.org/media/uploads/okano/dsc_8023s.jpg" width="484"></p> <p>mbed/LPC1768は内部にRTCを持っているので，このような外付けRTCを使う必要はありません．でももし高精度のRTCが必要だったり，外付けのWDTが必要な場合には，これもひとつの候補となり得るでしょう．</p> <p>このサンプル/デモコードは，もしまだRTCチップが設定されていなければ初期化し，その後，読み出した日付と時間をTextLCDに表示します．</p> <h1>コード:</h1> 
+
+<table border="1"> <tbody> <tr> 
+<td align="left" style="background-color: #ffcccc;">
+次のリンクは古いプログラムへのものです．<br />
+最新版は <a href="http://developer.mbed.org/components/PCF2127-High-accuracy-RTC-module/">コンポーネンツ・ページ</a>を御覧ください.
+</td> </tr> </tbody> </table>
+
+<p><a class="mcepp" href="http://mbed.org/users/okano/programs/NXP_PCF2127A/5zrvu" title="Published program: NXP_PCF2127A">NXP_PCF2127A</a></p> <p>TextLCDの表示の更新に割り込みを使います．</p> <p>RTCチップが毎秒の周期的な割り込みを発生するように設定します．</p> <p>この割り込みはmbedの8ピンに接続され，割り込みが来るとRTCレジスタを読み，TextLCDに表示します．</p> <pre>#include "mbed.h"
+#include "TextLCD.h"
+#include "NXP_PCF2127A.h"
+
+TextLCD         lcd(p24, p25, p26, p27, p28, p29, p30); // rs, rw, e, d0, d1, d2, d3
+NXP_PCF2127A    rtc( p9, p10 );
+InterruptIn     intr( p8 );
+
+void time_intr( void );
+void led_ctrl( void );
+
+int main() {
+    printf( "--- PCF2127 demo started.\r\n" );
+
+    if ( rtc.is_init_required() ) {
+        lcd.locate( 0, 0 );
+        lcd.printf( "please set time from terminal" );
+        rtc.set_time();
+        lcd.cls();
+    }
+
+    intr.fall( &amp;time_intr );
+
+    while ( 1 )
+        ;
+}
+
+
+void time_intr( void ) {
+    struct tm   dt, *dtp;
+    time_t      t;
+    char        s[ 30 ];
+    dtp = &amp;dt;
+
+    rtc.clear_intr();
+
+    t       = rtc.time( NULL );
+    dtp     = localtime( &amp;t );
+
+    strftime( s, 30, "%H:%M:%S, %Y/%b/%d %a", dtp );
+    printf( "%s\r\n", s );
+
+    strftime( s, 20, "%H:%M:%S PCF2127", dtp );
+    lcd.locate( 0, 0 );
+    lcd.printf( "%s", s );
+
+    strftime( s, 20, "%Y/%b/%d(%a)", dtp );
+    lcd.locate( 0, 1 );
+    lcd.printf( "%s", s );
+}</pre> <h1><img alt="" height="313" src="http://mbed.org/media/uploads/okano/pcf2712a.png" width="597"></h1> <h1>注意:</h1> <p>I2Cバスと割り込みの信号線はオープンドレインなので，プルアップ抵抗を忘れないようにしてください．</p> <h1>参考:</h1> <p>PCF2127A datasheet: <a href="http://www.nxp.com/pip/PCF2127A_2.html">http://www.nxp.com/pip/PCF2127A_2.html</a></p> <p>Realtime clock usage: <a href="http://mbed.org/users/roen/notebook/real-time/" style="text-decoration: none; color: #0073bd !important;">http://mbed.org/users/roen/notebook/real-time/</a></p>

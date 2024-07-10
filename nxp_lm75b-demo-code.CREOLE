@@ -1,0 +1,54 @@
+<table border="1"> <tbody> <tr> <td>このページは日本語でも記載されています．<a href="#japanese">日本語版はこのページ後半</a>をご覧ください．</td> <td>This page is written in Japanese as well. Please find it in <a href="#japanese">2nd half of this page</a>.</td> </tr> </tbody> </table> <h1>What is this?</h1> <p>This is a sample/demo code for NXP LM75B digital temperature sensor.</p> <p>The code is version 2, it has been made to reduce code redundancy of <a href="http://mbed.org/users/okano/notebook/lm75b-temperature-sensor-interface/">previous version</a> and easy operation using normal TextLCD.</p> <p>The connection of mbed and LM75B will be like this.</p> <p><img alt="" height="284" src="http://mbed.org/media/uploads/okano/lm75b.png" width="476"></p> <h1>Code:</h1> <p><span><a class="mcepp" href="http://mbed.org/users/okano/programs/NXP_LM75B/605dr" title="Published program: NXP_LM75B">NXP_LM75B</a><br></span></p> <p><span>The application code is just simple. Including a header file named "NXP_LM75B.h", make an instance and read it as float.</span></p> <pre>#include "mbed.h"
+#include "TextLCD.h"
+#include "NXP_LM75B.h"
+
+NXP_LM75B  temp_sensor( p9, p10, 0x9E );           // sda, scl, I2C_address(0x9E)
+TextLCD    lcd(p24, p25, p26, p27, p28, p29, p30); // rs, rw, e, d0, d1, d2, d3
+
+int main() {
+
+    lcd.locate( 0, 1 );
+    lcd.printf( " NXP LM75B demo" );
+
+    while ( 1 )
+    {
+        lcd.locate( 0, 0 );
+        lcd.printf( "%4.1f (deg-C)", (float)temp_sensor );
+        
+        wait( 1 );
+    }
+}
+</pre> <h1>Note:</h1> <p>If more than one LM75B are used, those device should have unique I2C addresses. The I2C address of each devices can be set by its pins A2, A1 and A0 (pins 5, 6 and 7).</p> <p>For each devices accesses, the I2C address from software will be 0x90 + (pin_setting &lt;&lt; 1).</p> <pre>NXP_LM75B  temp_sensor0( p9, p10 );        //  A2=Low  A1=Low  A0=Low
+NXP_LM75B  temp_sensor1( p9, p10, 0x92 );  //  A2=Low  A1=Low  A0=High
+NXP_LM75B  temp_sensor2( p9, p10, 0x94 );  //  A2=Low  A1=High A0=Low
+NXP_LM75B  temp_sensor3( p9, p10, 0x96 );  //  A2=Low  A1=High A0=High
+NXP_LM75B  temp_sensor3( p9, p10, 0x98 );  //  A2=High A1=Low  A0=Low
+.....
+...
+NXP_LM75B  temp_sensor7( p9, p10, 0x9E );  //  A2=High A1=High A0=High</pre> <p><span style="text-decoration: underline;">The I2C bus lines should be pulled-up properly since those signals are open-drain</span>.</p> <h1>Reference:</h1> <p><a href="http://www.nxp.com/pip/LM75B_2.html/">LM75B datasheet: http://www.nxp.com/pip/LM75B_2.html/</a></p> <hr> <hr> <p><a name="japanese"></a></p> <h1>これは？</h1> <p>NXPのデジタル温度センサ，LM75Bのサンプル/デモコードです．</p> <p>このコードはバージョン2で，先に公開していたコードを簡略化し，TextLCDを通常用いられるものに置き換えて実験しやすくしたものです．</p> <p>mbedとLM75Bの接続は下のようになります．</p> <p><img alt="" height="266" src="http://mbed.org/media/uploads/okano/nxp_lm75b.png" width="400"></p> <h1>コード:</h1> <p><a class="mcepp" href="http://mbed.org/users/okano/programs/NXP_LM75B/605dr" title="Published program: NXP_LM75B">NXP_LM75B</a></p> <p>アプリケーション・コードはシンプルです．「NXP_LM75B.h」をインクルード，インスタンスを作り，浮動小数点として値を読み取るだけです．</p> <pre style="margin-bottom: 1em; background-color: #ffffff; font-size: 1.1em; padding: 0.5em; border: 1px solid #cccccc;">#include "mbed.h"
+#include "TextLCD.h"
+#include "NXP_LM75B.h"
+
+NXP_LM75B  temp_sensor( p9, p10, 0x9E );           // sda, scl, I2C_address(0x9E)
+TextLCD    lcd(p24, p25, p26, p27, p28, p29, p30); // rs, rw, e, d0, d1, d2, d3
+
+int main() {
+
+    lcd.locate( 0, 1 );
+    lcd.printf( " NXP LM75B demo" );
+
+    while ( 1 )
+    {
+        lcd.locate( 0, 0 );
+        lcd.printf( "%4.1f (deg-C)", (float)temp_sensor );
+        
+        wait( 1 );
+    }
+}</pre> <h1>注意:</h1> <p>複数のLM75Bを同じI2Cバスに接続する場合，各デバイスには個別のI2Cアドレスを割り振らなければなりません．このアドレスは各デバイスのA2，A1，A0ピン(ピン5, 6, 7)で設定することができます．</p> <p>ソフトウェアから見て各デバイスのI2Cアドレスは"0x90 + (pin_setting &lt;&lt; 1)"のようになります．</p> <pre style="margin-bottom: 1em; background-color: #ffffff; font-size: 1.1em; padding: 0.5em; border: 1px solid #cccccc;">NXP_LM75B  temp_sensor0( p9, p10 );        //  A2=Low  A1=Low  A0=Low
+NXP_LM75B  temp_sensor1( p9, p10, 0x92 );  //  A2=Low  A1=Low  A0=High
+NXP_LM75B  temp_sensor2( p9, p10, 0x94 );  //  A2=Low  A1=High A0=Low
+NXP_LM75B  temp_sensor3( p9, p10, 0x96 );  //  A2=Low  A1=High A0=High
+NXP_LM75B  temp_sensor3( p9, p10, 0x98 );  //  A2=High A1=Low  A0=Low
+.....
+...
+NXP_LM75B  temp_sensor7( p9, p10, 0x9E );  //  A2=High A1=High A0=High</pre> <p><span style="text-decoration: underline;">I2Cバスの信号線はオープンドレインなので，プルアップ抵抗を忘れないように</span>してください．</p> <h1 style="font-family: 'Trebuchet MS', sans-serif; font-weight: bold;">参考:</h1> <p><a href="http://www.nxp.com/pip/LM75B_2.html/" style="text-decoration: none; color: #0073bd !important;">LM75Bデータシート: http://www.nxp.com/pip/LM75B_2.html/</a></p>

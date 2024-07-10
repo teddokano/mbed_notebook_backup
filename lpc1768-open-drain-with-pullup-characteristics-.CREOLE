@@ -1,0 +1,37 @@
+<<info>>
+Just a memo for myself
+<</info>>
+
+The LPC1768's internal pullup resistance can be calculated if I can measure voltage on variable resistive load. \\
+{{/media/uploads/okano/mechanism.png}}\\
+
+This is a memo when I tried to measure it. 
+
+==setup==
+
+On mbed, I set the pin5 as DigitalIn with internal pullup. \\
+
+<<code>>
+#include "mbed.h"
+
+DigitalIn     b0( p5 );
+
+int main()
+{
+    b0.mode( PullUp );
+    
+    while ( 1 ) {
+    }
+}
+<</code>>
+{{/media/uploads/okano/measurement.png}}\\
+
+
+==result==
+The result was like this.\\
+{{/media/uploads/okano/internal_pullup3.png}}\\
+
+There are some comments on this plot. 
+* The "V vs R" behavior is not linear. The blue line is saturated at 2.3V when R is very high. 
+* The I vs R has gentle slope at R <30k. 
+* From this result, it may be true that the internal pullup is made from weak current source ;)

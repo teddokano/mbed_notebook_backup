@@ -1,0 +1,192 @@
+<<warning title="Try Mac OS X 10.10.3">>
+**Mac OS X 10.10.3** has been officially released (09-Apr-2015(JST)) __which **can mount HDK-based mbed** without firmware update__.\\ 
+[[https://developer.mbed.org/forum/mbed/topic/5149/?page=1#comment-27653]]
+<</warning>>
+
+<<info>>
+Revised mbed-interface firmware delivery has been started\\
+Please visit a page of your **platform** and check the updated firmware availability first.
+
+**__NOTE:__** For NUCLEO series, you may need to modify the script. Please find [[https://developer.mbed.org/users/okano/notebook/mbed-on-yosemite/?compage=1#c15249|here]].
+----
+mbedインターフェースの改訂版ファームウェアの提供が徐々に始まっています．\\
+まずはご使用になられるプラットフォームの解説ページに行き，ファームウェア更新の有無を御確認ください．
+
+**__注:__** NUCLEOにコピーする場合には，スクリプトの変更が必要なようです．[[https://developer.mbed.org/users/okano/notebook/mbed-on-yosemite/?compage=1#c15249|こちら]]を参照ください
+<</info>>
+
+<<warning "Better solution is available now!">>
+New solution has been shared by [[https://developer.mbed.org/users/takuo/|Mr. WATANABE]]. Please visit following link. \\The new solution is far better than mine :)
+
+新しい解決法がWATANABEさんによって公開されています．下のリンクを御覧ください．\\
+この新しいやり方のほうがはるかに便利です (^ ^)
+
+Click! → [[http://developer.mbed.org/users/takuo/notebook/another-workaround-for-yosemite/|Another Workaround for the "Yosemite Problem"]]
+
+(17-Dec.-2014)
+<</warning>>
+
+<<warning title="Newer version applet available (2015Jan15 version)">>
+[[/media/uploads/okano/mbed-on-yosemite.app-20150115.zip|New version]] is available. Previous version was having a problem which makes a file named {{{MBED}}} under {{{/Volumes/}}} directory while the mbed is not connected. 
+
+If there is a {{{/Volumes/MBED"}}} as a file, not directory, please erase the file and use new version. 
+
+----
+
+以前のバージョンではmbedが接続されていないときに動作させると，{{{/Volumes/}}}下に{{{MBED}}}という名前のファイルを作ってしまう問題がありました．この [[/media/uploads/okano/mbed-on-yosemite.app-20150115.zip|対策版を公開]]しました．
+
+もし{{{/Volumes/MBED}}}がディレクトリとしてでなくファイルとして存在しているようなら，一旦これを消して，新しいバージョンを使うようにしてください．
+
+(この問題は[[http://qiita.com/hideakitai/items/196b0c4733e08c8f9a2c|こちらの記事]]でご指摘いただきました．ありがとうございます！)
+<</warning>>
+
+<<info>>
+Japanese version available in lower half of this page.\\
+このページの後半に日本語版が用意されています．
+<</info>>
+
+=What is this?=
+
+{{/media/uploads/okano/dnd_into_droplet.png}}
+
+
+This is just a file copy helper for HDK-based mbed on Mac OS X 10.10 (Yosemite).\\
+At this moment, the HDK-based mbed boards (other than mbed-LPC1768 and mbed-LPC11U24) [[http://developer.mbed.org/forum/mbed/topic/5149/|cannot be mounted correctly on Yosemite]].\\
+If you need to do it on Yosemite, you should execute long command on Terminal.app like next example.\\
+
+<<code>>
+sudo mount -u -w -o sync /Volumes/MBED ; cp -X ~/Downloads/mbed_blinky_LPC824_MAX_LPC824.bin /Volumes/MBED/
+<</code>>
+
+It is bit troublesome to type those commands for me, so I made a small application (droplet) for copying. \\
+
+=== How to use ===
+
+With this droplet, all you need to do is...\\
+
+# Connect your mbed board to USB on Mac. 
+# You will be warned by Yosemite as "The volume cannot repair" but ignore and press OK button to delete its dialog box window. 
+# Drag&drop the mbed executable file into the droplet. 
+# You will be asked to enter the administrator password (this is necessary to re-mount the mbed volume). 
+# You will see same warning like step-2 when the copy is completed. Ignore again. 
+# Press RESET button on the mbed. You will get the code is running ;)
+# If you need to copy again, drag&drop the file again 
+
+=== Download / Code ===
+
+<<warning title="Download">>
+__The binary is available here__. Unzip and copy on anywhere you want to put.\\
+**Please use this app at your own risk.**\\
+This program is distributed under Apache-2.0 license\\
+
+ [[/media/uploads/okano/mbed-on-yosemite.app-20150115.zip]]\\
+
+----
+
+For ST's __Nucleo series__, it has different volume name. Please use **next link to download a version for Nucleo**.\\
+ [[/media/uploads/okano/nucleo-on-yosemite.app.zip]]   
+<</warning>>
+
+<<code>>
+(*
+ *  mbed executable copier for Yosemite
+ *  01-Nov-2014, tedd
+ *
+ * this program is distributed under Apache-2.0 license
+ *   http://opensource.org/licenses/Apache-2.0
+ *)
+
+on open newFile
+	set targetPath to "/Volumes/MBED/" -- target volume (last '/' added on 2015Jan15)
+	set action1 to "sudo mount -u -w -o sync  " & targetPath & ";" -- re-mounting the mbed volume
+	
+	set newFileName to POSIX path of newFile -- get the file name and path in POSIX format
+	set action2 to "cp -X " & newFileName & " " & targetPath -- copy command
+	set comm to action1 & action2 -- concatinate all commands in a string
+	
+	do shell script comm password "" with administrator privileges -- execute all commands on a shell
+end open
+<</code>>
+
+
+=== Customize / Modification ===
+
+If you need customize the script, you can do it on your Mac.\\
+Just drag&drop the droplet into "Script Editor.app". You can edit the code and save to create new app :)\\
+
+{{/media/uploads/okano/editing_script_by_scripteditor_yosemite.png}}
+
+
+----
+
+=これはなに？=
+
+{{/media/uploads/okano/dnd_into_droplet.png}}
+
+
+これはMac OS X 10.10(Yosemite)上でHDKベースのmbedにファイルをコピーするツールです．\\
+いまのところHDKベースのmbed(mbed-LPC1768とmbed-LPC11u24以外のmbed)は[[http://developer.mbed.org/forum/mbed/topic/5149/|Yosemiteで正しくマウントすることができません]]．\\
+どうしてもYosemiteでこれをやりたいときには，次の例のようなコマンドをターミナル上で実行しなくてはなりません．\\
+
+<<code>>
+sudo mount -u -w -o sync /Volumes/MBED ; cp -X ~/Downloads/mbed_blinky_LPC824_MAX_LPC824.bin /Volumes/MBED/
+<</code>>
+
+これはちょっと面倒です．そんなわけで簡単なアプリケーション(ドロップレット)を作りました．\\
+
+=== どう使うの？ ===
+
+このドロップレットは次のように使います．\\
+
+# mbedをMacに接続します
+# 「OS Xはディスク"MBED"を修復できません」という警告がでますがOKボタンを押して無視します．
+# ドロップレットにmbedの実行ファイルをドラッグ・アンド・ドロップします．
+# 管理者パスワードを聞かれます (面倒ですが，ディスクを再マウントするために必要です)．
+# コピーが終わると，上記の2番の警告がまた出ますが無視します．
+# mbed基板のリセット・ボタンを押せば，mbedの実行コードが動作するはずです (^▽^)
+# もし再度コピーをするなら，またファイルをドラッグ・アンド・ドロップします．
+
+=== ダウンロード / コード ===
+
+<<warning title="ダウンロード">>
+__そのまま使える.appファイルをここに置いておきます__．zipを解凍して好きなところに保存して下さい．\\
+**このアプリケーションは，ユーザ自身の判断と責任で使用してください．**\\
+
+このプログラムはApache-2.0ライセンス下で配布されています\\
+ [[/media/uploads/okano/mbed-on-yosemite.app-20150115.zip]]\\
+
+----
+
+STの__Nucleoシリーズ__ではボリューム名が違うため，上のドロップレットは動作しません．**Nucleo用は次のリンクからダウンロード**してください．\\
+ [[/media/uploads/okano/nucleo-on-yosemite.app.zip]]   
+<</warning>>
+
+
+
+<<code>>
+(*
+ *  mbed executable copier for Yosemite
+ *  01-Nov-2014, tedd
+ *
+ * this program is distributed under Apache-2.0 license
+ *   http://opensource.org/licenses/Apache-2.0
+ *)
+
+on open newFile
+	set targetPath to "/Volumes/MBED/" -- target volume (last '/' added on 2015Jan15)
+	set action1 to "sudo mount -u -w -o sync  " & targetPath & ";" -- re-mounting the mbed volume
+	
+	set newFileName to POSIX path of newFile -- get the file name and path in POSIX format
+	set action2 to "cp -X " & newFileName & " " & targetPath -- copy command
+	set comm to action1 & action2 -- concatinate all commands in a string
+	
+	do shell script comm password "" with administrator privileges -- execute all commands on a shell
+end open
+<</code>>
+
+=== カスタマイズ / 改造 ===
+
+スクリプトの改造が必要な場合はMac上で簡単に変更できます．\\
+このドロップレットを「スクリプトエディタ.app」にドラッグ・アンド・ドロップするだけ．エディタが開くので，これを編集して保存しなおせば新しいappの出来上がりです (^ ^)\\
+
+{{/media/uploads/okano/editing_script_by_scripteditor_yosemite.png}}

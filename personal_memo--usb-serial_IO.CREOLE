@@ -1,0 +1,53 @@
+This is a personal memo to remember what I have done.
+
+Writen in Japanese only, sorry because this page contains no special things
+and/or local information.
+
+〜〜〜〜〜〜〜〜〜〜〜〜〜〜〜〜
+
+個人用メモ: 未来の自分のために書いておく．以下は2009年11月25日のメモから
+
+〜〜〜〜〜〜〜〜〜〜〜〜〜〜〜〜
+
+mbedは残念ながら「デバッガ」機能は無い．
+<<info>>
+mbedはCMSIS-DAPに対応．オフライン環境でデバッガが使えるようになっています．\\
+デバッガについての詳細はこちらのページで！\\
+[[http://mbed.org/users/MACRUM/notebook/uvision4_debug/|μVision4でデバッグ！]]
+
+(2013年8月9日追記)
+<</info>>
+
+その代わりに(?)printfデバッグの手段は提供されている．自分のコード内でprintfを使用することができるし，その出力先を(mbedをUSB経由で接続
+している)PCのシリアルポートに流せる．(このころmbedについて話をすると，こういう質問を多く受けた．そのときのメモ)
+
+PCのUSBポートに接続されたmbedは，マスストレージとしてだけでなくシリアル通信デバイスとしても認識される．**Windows環境の場合**にはこれ用の
+**ドライバをインストールすれば**コンソール入出力を使えるようになる．このドライバとその説明は下のURLに記載されている．
+
+http://mbed.org/handbook/SerialPC
+
+下の図は上記ドライバをインストール後，TeraTermをシリアル入出力に使おうとしているところ．
+
+mbedのシリアルはCOM11として見えている．
+
+{{http://mbed.org/media/uploads/okano/pc_teraterm_com.png}}
+
+TeraTermのではシリアルポート選択のポップアップメニューでmbedを確認できる．
+
+COMポートの番号はデバイスマネージャでも確認できる．
+
+{{http://mbed.org/media/uploads/okano/pc_device_mgr.png}}
+
+TeraTerm起動後，mbedからの改行コードはLF(0x10)だけで送られてくる(printf( "...\n"
+)としてるからだけど)ので，受信改行コードをLFにしておくと便利．
+
+{{http://mbed.org/media/uploads/okano/pc_teraterm_lf.png}}
+
+**Macの場合**は**ドライバ・インストール**の**必要なし**．
+
+  1. 上記URLのWebページの通り，ターミナル上で「ls /dev/tty.usbmodem*」を実行しシリアルデバイスを確認．
+
+  2. その後そのデバイスを**「screen」コマンド**の引数にして実行すればOK．Screenコマンドの終了は**Ctrl+a**に続いて**Ctr
+l+\**を押す．(これを行わずにTerminalを終了するとプロセスが残っており再接続できなくなる．この場合はkillコマンドでscreenを終了．)
+
+MacのTerminal/screenで受信改行コードをLFにするには???　←← まだ調べてない ( ^ ^ ;

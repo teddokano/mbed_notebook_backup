@@ -1,0 +1,282 @@
+<<info>>
+このページは日本語でも書かれています．日本語版はこのページ後半をご覧ください．\\
+Japanese version is available at later part of this page.
+<</info>>
+
+
+== What is this? ==
+
+This is a sample/demo code for IAP (In-Application Programming) routines which
+does LPC1768's internal flash memory access.
+
+First of all, I need to mention one thing: The LPC1768 has internal flash
+memory, it may be not best place to put data.
+
+Because, the mbed has LocalFileSystem and SD-card memory interface already.
+Those will be the best way to use the big big capacity storages. And it
+provides easy way to access via file system calls.
+
+Also you may need to care about how the mbed uses the internal flash.
+
+=== How the mbed uses internal flash? ===
+
+...because when you load new executable to the mbed (resetting mbed after new
+code stored in the mbed), the all (chip-internal) flash contents will be
+cleared and it may need to be protected certain flash memory area from other
+usage of the program execution (It may need reserve it by defining custom code
+section or something).
+
+[User can reserve the flash area which you want to access. It can be done by
+two declarations of USER_FLASH_AREA_START and USER_FLASH_AREA_SIZE in "IAP.h".
+Improved:20100312]
+
+However, still, the flash may be good when the mbed application which runs on
+single LPC1768 bare metal without SD-card or other storage devices.
+
+Please find next Notebook page that discuss about how to run the mbed
+application on other board.
+
+[[http://mbed.org/users/nxpfan/notebook/mbed-led-blink-code-on-lpcxpresso-
+lpc1768/]]
+
+[[http://mbed.org/users/chris/notebook/prototype-to-hardware/]]
+
+== Code: ==
+
+This program uses IAP (In-Application Programming) routine on LPC1768 internal
+ROM.
+
+All details of the IAP can be found on the LPC1768 user manual.
+
+This program demonstrates how to execute blank_check, erase and write the
+flash memory located in sector 29 (last 32K sector).
+
+In the LPC1768, the 512K bytes flash memory is divided in to 30 sectors (4KB *
+16 sectors + 32KB * 14 sectors). The blank_check and erase can be done in
+those sector by sectors.
+
+Data writing can be done with block size of 256, 512, 1024 or 4096 bytes. No
+writing allowed across the segment border in a call.
+
+<<program  /users/okano/code/IAP_internal_flash_write/ >>
+
+== Note: ==
+
+Please be careful not to overwrite/erase program code which is written on same
+flash memory.
+
+Normally, the executable image is written from lower side sectors.
+
+This program doesn't use file system interface. Because it may not be good
+idea to use file system in such small storage space, which takes certain
+amount of memory blocks(sector/cluster) for its management.
+
+This library provides simple interface to IAP call. The blank_check and erase
+by sector numbers, and write data by its address and data (block) length.
+
+<<warning title="disable interrupt while IAP is working">>
+Since this library does not enable/disable interrupt, user may need to control it.\\
+Interrupt while IAP, it will be a cause of problem. 
+
+The interrupt disable/enable can done by ##__disable_irq()## and ##__enable_irq()##. 
+
+reference: [[https://developer.mbed.org/questions/54146/LPC824-RTOS-and-IAP/]]
+<</warning>>
+
+== Reference: ==
+
+mbed (LED blink) code on LPCXpresso-LPC1768 (-LPC1769)\\
+[[http://mbed.org/users/nxpfan/notebook/mbed-led-blink-code-on-lpcxpresso-lpc1768/]]
+
+The binary runs on the LPC1768 bare metal\\
+[[http://mbed.org/users/chris/notebook/prototype-to-hardware/]]
+
+SystemCoreClock\\
+[[http://mbed.org/users/simon/programs/SystemCoreClock/16mhsh/]]
+
+LPC1768 user manual\\
+[[http://ics.nxp.com/support/documents/microcontrollers/pdf/user.manual.lpc17xx.pdf]]
+
+Flash memory address and sectors
+
+{{{
+Flash memory is placed address range of 0x00000000 - 0x0007FFFF
+
+sector#  start_address   last_address   sector_size
+      0     0x00000000  -  0x00000FFF            4K
+      1     0x00001000  -  0x00001FFF            4K
+      2     0x00002000  -  0x00002FFF            4K
+      3     0x00003000  -  0x00003FFF            4K
+      4     0x00004000  -  0x00004FFF            4K
+      5     0x00005000  -  0x00005FFF            4K
+      6     0x00006000  -  0x00006FFF            4K
+      7     0x00007000  -  0x00007FFF            4K
+      8     0x00008000  -  0x00008FFF            4K
+      9     0x00009000  -  0x00009FFF            4K
+     10     0x0000A000  -  0x0000AFFF            4K
+     11     0x0000B000  -  0x0000BFFF            4K
+     12     0x0000C000  -  0x0000CFFF            4K
+     13     0x0000D000  -  0x0000DFFF            4K
+     14     0x0000E000  -  0x0000EFFF            4K
+     15     0x0000F000  -  0x0000FFFF            4K
+     16     0x00010000  -  0x00017FFF           32K
+     17     0x00018000  -  0x0001FFFF           32K
+     18     0x00020000  -  0x00027FFF           32K
+     19     0x00028000  -  0x0002FFFF           32K
+     20     0x00030000  -  0x00037FFF           32K
+     21     0x00038000  -  0x0003FFFF           32K
+     22     0x00040000  -  0x00047FFF           32K
+     23     0x00048000  -  0x0004FFFF           32K
+     24     0x00050000  -  0x00057FFF           32K
+     25     0x00058000  -  0x0005FFFF           32K
+     26     0x00060000  -  0x00067FFF           32K
+     27     0x00068000  -  0x0006FFFF           32K
+     28     0x00070000  -  0x00077FFF           32K
+     29     0x00078000  -  0x0007FFFF           32K
+
+Table 568. Sectors in a LPC17xx device, User manual (Rev. 01 - 4 January 2010)
+}}}
+
+|2010/03/10 |initial version|
+|2010/03/12 |updated for revised code which can have user reserved area|
+|2011/06/24 |a. some word corrections and rephrase|
+| |b. a link has been added for how to run the code on LPCXpresso|
+|2012/02/16 |page converted new (wiki) format|
+|2012/10/13 |program link restored, some minor change of  words|
+|2015/07/03 |added a warning of "disable interrupt while IAP is working"|
+
+
+\\
+\\
+
+<<info>>
+Japanese version follows
+<</info>>
+
+== これは？ ==
+
+IAP (In-Application Programming) ルーチンを使ってLPC1768の内部フラッシュにアクセスするサンプル/デモです．
+
+まず最初に言っておかなければならないこと..
+
+LPC1768は内部にフラッシュメモリを持っていますが，そこはデータを保存するのに最適な場所とは言えません．
+
+それはmbedにはすでにLocalFileSystemやSDカードといったインターフェースが用意されており，大きな容量とファイルシステム・コールを通した簡単
+なアクセス方法が提供されているためです．
+
+また下記のような制限もあり「mbedをmbedとして使う場合」は，LocalFileSystemやSDカードを使うことを推奨します．
+
+=== 「mbedをmbedとして使う場合」内部フラッシュメモリがどのように扱われるか ===
+
+...mbedでは新しく実行ファイルをダウンロードした時，フラッシュの内容はすべてクリアされてしまいます．また使用するフラッシュの領域は(任意のコードセクシ
+ョンをを宣言するなどして，そのエリアを確保して)プログラムの実行から保護しなければなりません．
+
+[IAPでアクセスするフラッシュの決まった部分を予約して(取って)おくことが可能です．"IAP.h"内のUSER_FLASH_AREA_STARTとUSER
+_FLASH_AREA_SIZEの二つの宣言を用いてこれを行うことができます．20100312改良]
+
+しかしそれでもフラッシュが良いデータの置き場所になることがあります．mbedアプリケーションがSDカードやその他ストレージデバイス無しの単体のLPC1768
+上で実行する場合です．
+
+別のボードでmbedアプリケーションを走らせる方法については次のNotebookページが参考になります．
+
+[[http://mbed.org/users/nxpfan/notebook/mbed-led-blink-code-on-lpcxpresso-lpc1768/]]
+
+[[http://mbed.org/users/chris/notebook/prototype-to-hardware/]]
+
+== コード: ==
+
+このプログラムはLPC1768の内部ROMに用意されたIAP(In-Application Programming)ルーチンを使います．
+
+IAPの詳細についてはLPC1768のユーザマニュアルを参照してください．
+
+このプログラム例は，フラッシュメモリのセクタ29に対するブランクチェック，消去，書き込みを実行します．
+
+LPC1768のフラッシュメモリは30個のセクタに分かれておりブランクチェック，消去はこのセクタ毎に行えます．
+
+書き込みは1回に256，512，1024または4096バイトのブロック単位で行うことができます．セクタ境界をまたぐ書き込みを1度に行うことはできません．
+
+<<program  /users/okano/code/IAP_internal_flash_write/ >>
+
+== 注意: ==
+
+同じフラッシュメモリ上にはプログラムが置かれるので，それを消さない/上書きしないように注意が必要です．
+
+通常，実行イメージは下位側のセクタから書かれます．
+
+このプログラムはファイルシステム・インターフェースを使用していません．なぜならファイルシステムを使おうとすると，それを管理するメモリブロック(セクタ/クラス
+タ)を置く場所が，このような狭いストレージエリア内に必要になるためです．
+
+このためこのライブラリはIAPコールを単純化のみになっています．ブランクチェックと消去はセクタ番号で行い，書き込みはアドレスとデータ(ブロック)長の指定で行
+います．
+
+<<warning title="IAP実行中は割り込みを無効化してください">>
+このライブラリ内では割り込みを無効化/有効化することはないので，ユーザがこれを制御しなければなりません．\\
+IAP実行中の割り込みは問題の原因となります．
+
+割り込みの無効化/有効化は ##__disable_irq()## と ##__enable_irq()## によって行うことができます. 
+
+参考： [[https://developer.mbed.org/questions/54146/LPC824-RTOS-and-IAP/]]
+<</warning>>
+
+== 参考資料: ==
+
+mbed (LED blink) code on LPCXpresso-LPC1768 (-LPC1769)\\
+[[http://mbed.org/users/nxpfan/notebook/mbed-led-blink-code-on-lpcxpresso-lpc1768/]]
+
+mbedアプリケーションの単体のLPC1768上での実行\\
+[[http://mbed.org/users/chris/notebook/prototype-to-hardware/]]
+
+SystemCoreClock (CPUクロック)\\
+[[http://mbed.org/users/simon/programs/SystemCoreClock/16mhsh/]]
+
+LPC1768ユーザマニュアル\\
+[[http://ics.nxp.com/support/documents/microcontrollers/pdf/user.manual.lpc17xx.pdf]]
+
+フラッシュメモリのアドレスとセクタ
+
+{{{
+
+Flash memory is placed address range of 0x00000000 - 0x0007FFFF
+
+sector#  start_address   last_address   sector_size
+      0     0x00000000  -  0x00000FFF            4K
+      1     0x00001000  -  0x00001FFF            4K
+      2     0x00002000  -  0x00002FFF            4K
+      3     0x00003000  -  0x00003FFF            4K
+      4     0x00004000  -  0x00004FFF            4K
+      5     0x00005000  -  0x00005FFF            4K
+      6     0x00006000  -  0x00006FFF            4K
+      7     0x00007000  -  0x00007FFF            4K
+      8     0x00008000  -  0x00008FFF            4K
+      9     0x00009000  -  0x00009FFF            4K
+     10     0x0000A000  -  0x0000AFFF            4K
+     11     0x0000B000  -  0x0000BFFF            4K
+     12     0x0000C000  -  0x0000CFFF            4K
+     13     0x0000D000  -  0x0000DFFF            4K
+     14     0x0000E000  -  0x0000EFFF            4K
+     15     0x0000F000  -  0x0000FFFF            4K
+     16     0x00010000  -  0x00017FFF           32K
+     17     0x00018000  -  0x0001FFFF           32K
+     18     0x00020000  -  0x00027FFF           32K
+     19     0x00028000  -  0x0002FFFF           32K
+     20     0x00030000  -  0x00037FFF           32K
+     21     0x00038000  -  0x0003FFFF           32K
+     22     0x00040000  -  0x00047FFF           32K
+     23     0x00048000  -  0x0004FFFF           32K
+     24     0x00050000  -  0x00057FFF           32K
+     25     0x00058000  -  0x0005FFFF           32K
+     26     0x00060000  -  0x00067FFF           32K
+     27     0x00068000  -  0x0006FFFF           32K
+     28     0x00070000  -  0x00077FFF           32K
+     29     0x00078000  -  0x0007FFFF           32K
+
+Table 568. Sectors in a LPC17xx device, User manual (Rev. 01 - 4 January 2010)
+}}}
+
+|2010/03/10 |initial version|
+|2010/03/12 |updated for revised code which can have user reserved area|
+|2011/06/24 |a. some word corrections and rephrase|
+| |b. a link has been added for how to run the code on LPCXpresso|
+|2012/02/16 |page converted new (wiki) format|
+|2012/10/13 |program link restored, some minor change of  words|
+|2015/07/03 |「IAP実行中は割り込みを無効化してください」の警告を追加|

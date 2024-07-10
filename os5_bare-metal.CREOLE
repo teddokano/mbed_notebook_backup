@@ -1,0 +1,16 @@
+==オンライン・コンパイラでmbed OS ベアメタル==
+
+<<info>>
+あとで調べてわかったのですが，オンラインで使えるサンプルプログラムを[[https://os.mbed.com/docs/mbed-os/v5.12/reference/bare-metal-example-application.html | Mbed公式が公開していました]]．
+
+<</info>>
+
+[[https://os.mbed.com/users/MACRUM/notebook/mbed-fest-2019-summer-report/|mbed祭り 2019@初夏の新横浜(6月15日)]]の[[https://os.mbed.com/users/ytsuboi/notebook/ja-mbed-fest-June-2019-slides/|坪井さんのプレゼン]]で紹介された「mbed OS ベアメタル設定」について．\\
+そのイベントの中での「ふれあいコーナー」で『オンライン・コンパイラでも同設定が使えるのか？』と質問を受けました．\\
+これは坪井さんもやったことがないというので，その場で実験 →→ 問題なく動作することが確認できました．\\
+動作実験を行った際のプログラムはこちらで公開しています．\\
+<<program https://os.mbed.com/users/okano/code/mbed-os5_blinky_bare-metal/>>
+
+ライトニング・トークではその報告とデモを行いました．\\
+参考として，そのデモの再現ビデオを作成したのでここに置いておきます．\\
+{{https://youtu.be/ExvAMaIpLWs}}

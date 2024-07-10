@@ -1,0 +1,331 @@
+mbedのライブラリは非常に便利です．\\
+利用可能なライブラリはmbed.orgサイト内に公開されていて，その使用法の単純なサンプル「HelloWorld」プログラムをそのままインポートして動作を試したり，あるいは自作のプログラム内にライブラリだけをインポートしてすぐに使うことができるようになっています．\\
+これらのコードは利用するだけでなく，自分で書いて公開することでコミュニティに貢献できます．
+
+このノートページでは作成したライブラリを他の人にも使ってもらえるようにする方法を説明します．
+
+ライブラリを作ったら，まず「公開(Publish)」します．\\
+もちろんこれだけでも，部品の型番やキーワードとなる単語でmbedページ内の検索に引っかかるようになりますから，使ってもらえるようにはなります．
+しかしより多くの人の目に触れるように「コンポーネンツ・データベース」に登録しておくと，さらに使ってもらえるチャンスが増えるでしょう．
+
+
+<<info>>
+このページはまだ書きかけです．\\
+このページは日本語でしか書かれていません．\\
+This page is available in Japanese only. 
+<</info>>
+
+<<info>>
+英語版ではクラスライブラリの作り方〜公開の方法がこちらに紹介されています．\\
+[[http://mbed.org/cookbook/Writing-a-Library | Writing a Library]]
+<</info>>
+
+
+=1. mbedライブラリの公開方法=
+
+==1.1 ライブラリを作る==
+ここからいくつかの段階を経て，ライブラリを作る方法を説明します．\\
+ここに書いてある方法は，その1例と考えて下さい．他にも別の環境からコードを移植したり，違った手法で開発することも可能でしょう．
+
+===1.1.1 テストプログラムを書いてみる 〜まずは部品が動くことを確かめる〜===
+
+**簡単なデバイスを例に**
+
+ここでは非常に単純なI^^2^^Cチップ「[[http://www.jp.nxp.com/products/interface_and_connectivity/i2c/i2c_multiplexers_switches/series/PCA9547.html|PCA9547]]」を例に，ライブラリの作成手順を説明します．\\
+PCA9547は1:8のI^^2^^Cマルチプレクサで，8系統に分岐したI^^2^^Cのそれぞれの枝を有効化したり，あるいは全部の枝を無効化することができるチップです．\\
+多くのI^^2^^Cのスレーブを接続する場合のスレーブアドレスの重複回避や，I^^2^^Cバス容量負荷を軽減する目的で使うことができます．\\
+またマルチプレクサの前後でレベル変換(ロジック電圧レベルの変換)も行うことができます．
+
+{{/media/uploads/okano/simplified_pca9547_n.png|PCA9547|216}}\\
+//PCA9547：2本線のシリアルバス：I^^2^^Cの信号を8系統の分岐で切り替えて使える//
+
+今回はライブラリをいきなり書き始める前に，まずこのチップが動作するかどうかを確認しました．\\
+PCA9547内部のスイッチの切替ははI^^2^^C経由で制御を行います．このためPCA9547自体にもスレーブアドレスが割り振られます．このPCA9547のアドレス設定はチップのピンで行います．\\
+今回の実験ではA0〜A2全てのピンをGNDに接続し，アドレスを0xE0に設定しました．
+
+{{/media/uploads/okano/pca9547_address_setting.png|PCA9547_address_setting|400}}\\
+//PCA9547のスレーブアドレスはハードウェアによって設定できる//
+
+制御自体はとても単純で，I^^2^^Cの転送内でスレーブアドレスに続き1バイトの送信を行います．この1バイト中の下側4ビットにより，マルチプレクサ以下のバスを有効/無効(bit3を1または0)，有効化するチャンネルを指定します(bit2〜0でチャンネル番号を指定)．\\
+これだけを行うコードが下の例です．\\
+ただマルチプレクサだけではI^^2^^Cの動作の確認は難しいので，PCA9547の下位側にI^^2^^C温度センサのLB75Bを接続して，データが取得できるかどうかを確認しています．
+
+{{/media/uploads/okano/new_lib_device_connection.png|device_connection}609}}\\
+//動作確認のための接続．下位ポートにLM75Bを接続して通信できるかどうかを確認//
+
+ {{/media/uploads/okano/program.png}}\\
+//確認用プログラム構成．LM75Bの動作を確認するためライブラリもここにインポートしてある//
+
+<<code main.cpp>>
+#include "mbed.h"
+#include "LM75B.h"
+ 
+I2C     i2c( p28, p27 );
+ 
+void set_pca9547( char ch )
+{
+    char    v   = 0x08 | ch;
+    i2c.write( 0xE0, &v, 1 );
+}
+ 
+int main()
+{
+    set_pca9547( 0 );
+ 
+    LM75B   tmp0( p28, p27 );   //  making instance after a branch of I2C bus (which is connecting the LM75B) enabled
+ 
+    while(1) {
+        printf( "%.3f\r\n", tmp0.read() );
+        wait( 1.0 );
+    }
+}
+<</code>>
+//[[/users/okano/code/pca9547_Hello/rev/fb906b7b1452|最初に書いてみたテストコード]]//
+
+さて，このようなデバイスの接続とプログラムで，めでたく動作を確認することができました．
+
+===1.1.2 コードに変更を加える前に===
+
+いまから動作の確認できたコードに変更を加えながらライブラリを作成していきますが，ここで一旦，現在の動作するコードを保存しておきましょう．\\
+mbedのオンライン環境では「リビジョン・コントロール」機能が使えます．作成中のプログラム/ライブラリの各時点での状態を保存しておくことができます．\\
+保存するには「Commit」ボタンを押します．
+
+ {{/media/uploads/okano/commit_button.png}}
+
+「Commit」ボタンを押す度に「これはどういう状態を保存するのか？」と聞かれます．後から履歴を辿る時の参考になる情報を残すためなので，これがどういう作業を行ったものなのかをメモしておきましょう．
+
+<<info>>
+保存した状態(リビジョン)は「Revisions」ボタンを押すことで閲覧できます．またリスト表示されたリビジョンを選択しておき，「Switch」ボタンを押すとソースコードとライブラリを保存された状態に切り替えることができます．\\
+{{/media/uploads/okano/rivision_history.png}}
+<</info>>
+
+===1.1.3 ライブラリを書き始める===
+
+動作確認用のプログラムを保存したので，ここから変更を加えていきます．\\
+もちろん確認用のプログラムをそのまま公開しても構いません．このままでもチップの制御法の具体的な説明になっていますから，誰か同じチップを使う人が現れた時には充分に参考になるでしょう．
+
+しかしもし可能であればmbedの多くのライブラリがそうであるように，ユーザがより利用しやすい形で公開するほうが理想的です．mbedのライブラリはC++の記法に則った「クラスライブラリ」として書かれるので，ある程度のC++の知識が必要になります．\\
+「C++は詳しくないんだけど.. (´・ω・｀)」という方はこの機会に少し齧ってみましょう．mbed.org内で公開されている沢山のライブラリ・コードも参考になります．
+
+<<info>>
+mbedのプログラムで動作を確認したコードを，クラスライブラリに作り変える方法はこちらが参考になります．このページは英語版ですが，クラスライブラリ化から公開までの手順が解説されています．\\
+[[http://mbed.org/cookbook/Writing-a-Library | Writing a Library : /cookbook/Writing-a-Library]]
+<</info>>
+
+
+===1.1.4 新しいライブラリ・フォルダ===
+
+ライブラリのファイルはプログラム内にベタに置くのではなく，ライブラリ用のフォルダを作ってそこに置きます．\\
+新しいフォルダは，先ほどの「プログラム」のアイコンの上で右クリックすれば作れます．\\
+名前はデバイスの名前にしておきます．
+
+{{/media/uploads/okano/lib_folder.png}}
+
+===1.1.5 新しいファイル===
+
+続いてファイルを作ります．新規に作る場合はライブラリフォルダの上で右クリック．
+
+{{/media/uploads/okano/new_file.png}}
+
+デバイス名を持つ2つのファイル，拡張子がそれぞれ.cppと.hの新しいファイルを作っておきます．
+
+{{/media/uploads/okano/two_files_in_lib_folder.png||210}}
+
+さて，この出来上がった2つのファイルの中身を書いていきます．この例を作成した時には同じプログラム内にあるLM75Bのライブラリの中身をコピペして，それに変更を加えることでPCA9547のコードとしました．
+
+<<code PCA9547.h>>
+#ifndef MBED_PCA9547_H
+#define MBED_PCA9547_H
+ 
+#include "mbed.h"
+ 
+class PCA9547
+{
+public:
+    PCA9547( PinName sda, PinName scl, char i2c_address = 0xE0 );
+ 
+    ~PCA9547();
+ 
+    void select( char channel );
+ 
+private:
+    I2C     i2c;
+    char    _i2c_addr;
+};
+ 
+#endif  //  MBED_PCA9547_H
+<</code>>
+//[[/users/okano/code/PCA9547/file/662ab6a5aa97/PCA9547.h|PCA9547.h最初のバージョン]]//
+
+<<code PCA9547.cpp>>
+#include "PCA9547.h"
+ 
+PCA9547::PCA9547( PinName sda, PinName scl, char i2c_address ) : i2c( sda, scl ), _i2c_addr( i2c_address )
+{
+    //  do nothing.
+    //  leave it in default state.
+}
+ 
+PCA9547::~PCA9547()
+{
+ 
+}
+ 
+void PCA9547::select( char channel )
+{
+    char    data    = 0x08 | channel;
+ 
+    i2c.write( _i2c_addr, &data, 1);
+}
+<</code>>
+//[[/users/okano/code/PCA9547/file/662ab6a5aa97/PCA9547.cpp|PCA9547. cpp最初のバージョン]]//
+
+=== 1.1.6 ライブラリ・テスト用のプログラム===
+
+ライブラリが書けたらテスト用のプログラムが必要です．最初に作った確認用プログラムのmain.cppを書き換えてテスト・プログラムに変更します．
+
+<<code PCA9547.cpp>>
+#include "mbed.h"
+#include "LM75B.h"
+#include "PCA9547.h"
+ 
+int main()
+{
+    PCA9547 mux( p28, p27, 0xE0 );
+    
+    mux.select( 0 );
+    
+    LM75B   tmp0( p28, p27 );   //  making instance after a branch of I2C bus (which is connecting the LM75B) enabled
+ 
+    while(1) {
+        printf( "%.3f\r\n", tmp0.read() );
+        wait( 1.0 );
+    }
+}
+ 
+<</code>>
+//[[/users/okano/code/pca9547_Hello/file/63d8f8d68f61/main.cpp|ライブラリのテスト・プログラム]]//
+
+これでコンパイルして動作に問題がなければOKです．\\
+ここでもう一度コミットボタンを押して，現在の状態を保存しておきましょう．このプログラムではプログラムとライブラリの両方を別々に保存しておけます．ライブラリ作成後，プログラムをコミットしようとしたら「ライブラリを先にコミットする？」と聞かれます．\\
+もちろんプログラムもライブラリも両方コミットしておきましょう．
+
+{{/media/uploads/okano/commit_lib_first.png}}
+
+==1.2 いよいよ公開.. の前に==
+
+===1.2.1 公開の前に (1)===
+
+テスト・プログラムを使ってライブラリが動作することが確認できれば公開しても構いません．\\
+しかしユーザにさらに使ってもらいやすいようにするには「ドキュメント」もあったほうがいいでしょう．\\
+ドキュメントというと「めんどくせぇ」という声が聞こえてきそうですが，mbed.orgではこの労力を最小化してくれる仕組みが用意されています．
+
+「Doxygen」と呼ばれるフォーマットでソースコード内にドキュメンを書いておくことができます．実際にこの説明で使っているコードではPCA9547.h内にライブラリについての解説を追記しました．\\
+「{{{/**}}}」で始まり「*/」で終わるコメントはDoxygenフォーマットのドキュメントです．たとえばコンストラクタについての説明は次のように書くことができます．
+
+<<code>>
+    /** Create a PCA9547 instance connected to specified I2C pins with specified address
+     *
+     * @param sda I2C-bus SDA pin
+     * @param scl I2C-bus SCL pin
+     * @param i2c_address I2C-bus address (default: 0xE0)
+     */
+    PCA9547( PinName sda, PinName scl, char i2c_address = 0xE0 );
+<</code>>
+
+これを書いておくと，公開後，オンライン・コンパイラのライブラリフォルダを開いてClasses内を見ると，そのまま参照可能なドキュメントになります．
+
+<<gallery size=large>>
+ [[/media/uploads/okano/api_document_online_ide.png |{{/media/uploads/okano/api_document_online_ide.png}}]] 
+<</gallery>>
+
+またmbedの公開ページでは「API Documentation」リンクを開くと，綺麗にフォーマットされたドキュメントとして見ることができるようになります．
+
+<<gallery size=large>>
+ [[http://mbed.org/users/okano/code/PCA9547/ |{{/media/uploads/okano/link_to_api_doc.png}}]] 
+ [[/users/okano/code/PCA9547/docs/3c0af4c37587/classPCA9547.html |{{/media/uploads/okano/api_page.png}}]] 
+<</gallery>>
+
+[[/users/okano/code/PCA9547/docs/3c0af4c37587/classPCA9547.html]]
+
+=== 1.2.2 公開の前に (2)===
+
+公開するプログラムやライブラリについての説明を，あらかじめ編集して設定しておくことができます．\\
+コンパイラページの右横に欄が用意されており，ここに説明を書くことができます．\\
+公開作業を行う時に開くダイアログ内でも編集できますが，まさに公開しようとしている"緊張の瞬間"に長い文を書くのもしんどいので，ここに書いておくとちょっと気が楽になります．
+
+{{/media/uploads/okano/description_box_n.png}}
+
+
+<<info>>
+各作業を行う中でこまめにコミットしておくと後で便利です．上記の説明内のコード例などは，各時点でコミットして残しておいたコードです．\\
+ただしあまりに細かいコミットばかりを行っていると，公開後，その履歴が見れるのでちょっと恥ずかしいことがあったりします．\\
+今回作成したコード例では，[[http://mbed.org/users/okano/code/PCA9547/rev/7e884a7805b1|コメントを訂正し忘れてコミットし直したもの]]なども見れてしまいます (^ ^;\\
+<</info>>
+
+
+== 1.3 公開しましょう==
+
+公開はプログラムアイコンの上で右クリックし「Publish」を選択するだけです．\\
+
+{{/media/uploads/okano/publish.png}}
+
+ただし，今回の例では未公開ライブラリを含むプログラムを公開しようとしたので，「先にライブラリを公開しなくてはならない」とのメッセージが表示されます．このダイアログの「Publish」ボタンを押すと，ライブラリ公開用の設定が開きます．
+
+{{/media/uploads/okano/publish_lib_first.png}}\\
+{{/media/uploads/okano/publish_dialog.png}}\\
+//スペルミスしてた．いまごろ気付いた ( ꒪﹃ ꒪)//
+
+ここではライブラリをどのように公開するかを聞いてきています．ライブラリの名前，説明，タグ(必須ではない)，プログラムとして公開するかライブラリとして公開するか，公開元の設定(Published in)，公開/非公開(Visibility)，ライセンスの設定があります．
+
+この中の「公開元の設定(Published in)」は，ユーザがチームに参加している場合，そのチームとして公開できるようになっています．\\
+「公開/非公開(Visibility)」の中の「Public (Unlisted)」は無制限の公開であるけれど，mbed.orgのトップページやActivityページにその情報を載せない"ひっそりとした公開"を行うためのものです．\\
+ライセンスのチェックボックスは，オープンソースのApache2ライセンスで公開する場合，ここにチェックさえ入れておけばそれを明示してくれる便利な機能です．\\
+「OK」ボタンを押すとライブラリが公開されます．
+
+続いて，同じ手順でプログラムの公開となります．ライブラリ公開と同じダイアログが開いて公開の設定を行います．並んでいる設定項目は全く同じです．そのままOKボタンを押せば.. しかしここで問題が発生しました．この例ではライブラリとプログラムを同じ名前にしていたので「重複するプログラム・ライブラリ名では公開できない」と怒られてしまいました．
+
+{{/media/uploads/okano/duplicated_name.png}}
+
+最初からプログラム名を問題ないように設定してあれば続けて公開ができるのですが，今回は一旦このダイアログをキャンセルして閉じて，プログラム名を変更しました．
+
+{{/media/uploads/okano/rename.png}}
+
+名前を「PCA9547_Hello」に変更して無事に公開できました．
+
+{{/media/uploads/okano/new_published_url.png}}
+
+公開したコードにはそれぞれのページが作られます．これらのページには必要な情報の追加やタグや公開設定の変更などを行う機能がまとめられています．
+
+<<gallery size=large>>
+ [[/users/okano/code/pca9547_Hello/|{{/media/uploads/okano/newpage.png}}]] 
+<</gallery>>
+
+自分が公開したページは，ユーザページ内の「Code」の一覧に表示されます．
+
+<<gallery size=large>>
+ [[/users/okano/code/ |{{/media/uploads/okano/code_in_user_page.png}}]] 
+<</gallery>>
+
+=2. コンポーネント・データベースへの登録=
+
+ここまでできれば，次は「コンポーネント・データベース」へ登録しておきましょう！
+ここへの登録は非常に簡単です(^ ^)
+
+==2.1 新規コンポーネント==
+
+mbed.orgのページの最上部，「Components」のリンクをクリックし，コンポーネント・ページの「Add a component」をクリック．
+
+{{/media/uploads/okano/add_cmp_button.png}}
+
+そうするとページの雛形が用意されています．\\
+名前，このコンポーネントの説明に，先ほど公開したHelloプログラムとライブラリの公開ページヘのリンクを入力し，その他データシートへのリンクや必要となる情報を書き込んでおきます．\\
+可能であれば部品の写真やブロック図，またピン配置/接続図なども描いて貼っておくと良いでしょう．
+
+<<gallery size=large>>
+{{/media/uploads/okano/component_registration_n.png}}
+<</gallery>>
+
+一番下の「ノート」欄にはWikiフォーマットにより様々なリンク，画像，ビデオなどを貼り付けておくことができます．これを利用することにより，ユーザによりわかりやすい情報提供を行うことができます．\\
+たとえばこれはステップングモータ用の制御チップですが，ビデオをこのページに張り込むことによってHelloプログラムの動作をより明確に伝えています．\\
+[[http://mbed.org/components/PCA9629-Stepper-motor-controller/]]

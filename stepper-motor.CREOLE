@@ -1,0 +1,128 @@
+<h1>このページはまだ未公開．書きかけでーす！</h1>
+<table border="1" cellpadding="4" cellspacing="0">
+<tbody>
+<tr>
+<td>このページは日本語でも記載されています．<a href="#japanese">日本語版はこのページ後半</a>をご覧ください．</td>
+<td>This page is written in Japanese as well. Please find it in <a href="#japanese">2nd half of this page</a>.</td>
+</tr>
+</tbody>
+</table>
+<h1>What is this?</h1>
+<p>A class library and its sample code for the stepper (stepping) motor drive.</p>
+<p>The mbed drives a stepper motor but a motor driver chip. Because the mbed cannot drive the motor directly which does not have enough current capacity.</p>
+<p>The stepper motor can be driven with two signals with appropriate phase pulse sequence. This library let the mbed to generate those signals.</p>
+<p>Next picture is a simplified model of the stepper motor operation (simplified to explain the mechanism easer). You can see the switching of coil current direction in each timings makes the rotor turn. The mbed with this library manages these signal timing and phase. The example of this picture has only 4 position (angle) in one rotation (in two phase operation) but actual motor has more position when the signals making one of those phase.</p>
+<p><img alt="" height="253" src="http://mbed.org/media/uploads/okano/stepper_motor_basic.gif" width="594"></p>
+<h1>Code :</h1>
+<p>The code is available as a library : <a class="mcepp" href="http://mbed.org/users/okano/libraries/StepperMotor/lienwx" title="Published program: StepperMotor">StepperMotor</a></p>
+<p>And sample codes are available.</p>
+<p>Just a simple code to operate one motor: <a class="mcepp" href="http://mbed.org/users/okano/programs/StepperMotor_HelloWorld/lifox3" title="Published program: StepperMotor_HelloWorld">StepperMotor_HelloWorld</a></p>
+<p>Bit complex sample is also available that operates 3 stepper motors simultaneously : <a class="mcepp" href="http://mbed.org/users/okano/programs/AnalogClock_StepperMotor_NTP/lif482" title="Published program: AnalogClock_StepperMotor_NTP">AnalogClock_StepperMotor_NTP</a></p>
+<p>This analog clock demo is a code which has been demonstrated in Make: Tokyo Meeting 06 (@Tokyo Institute of Technology on 20 &amp; 21 Nov 2010). It demonstrates the stepper motors and NTP access capability via internet connection. The NTP access code is from <a href="http://mbed.org/users/nucho/programs/SimpleLCDClock/">http://mbed.org/users/nucho/programs/SimpleLCDClock/</a> .</p>
+<pre>#include "mbed.h"
+#include "StepperMotor.h"
+
+BusOut          leds( LED4, LED3, LED2, LED1 );
+StepperMotor    m( p21, p22, p23, p24 );
+
+int main() {
+    m.set_sync_mode( StepperMotor::SYNCHRONOUS );
+    m.set_power_ctrl( true );
+
+    while ( 1 ) {
+    
+        leds    = 1;
+        m.go_angle( 120 );
+        wait( 0.5 );
+
+        leds    = 2;
+        m.go_angle( 240 );
+        wait( 0.5 );
+
+        leds    = 3;
+        m.go_angle( 0 );
+        wait( 0.5 );
+
+        leds    = 4;
+        m.go_angle( 240 );
+        wait( 0.5 );
+
+        leds    = 5;
+        m.go_angle( 120 );
+        wait( 0.5 );
+
+        leds    = 6;
+        m.go_angle( 0 );
+        wait( 0.5 );
+    }
+}</pre>
+<h1>Hardware :</h1>
+<p><img alt="" height="306" src="http://mbed.org/media/uploads/okano/stepper_motor_schematic.png" width="587"></p>
+<h3>Supply:</h3>
+<p>To simplify the hardware configuration, it uses only one power supply from USB bus (from mbed's VU output). The USB supply should be taken from root hub (USB ports on a PC) or self power hub. If bus power hub is used for the supply, it may have problem of the current capacity (self powered hub: &gt;500mA/port, bus powered hub: = 100mA/port).</p>
+<p>If the motor doesn't have enough torque, higher voltage supply can be applied on motor power supply pins on the TA7774PG (pins 9 and 16).</p>
+<h3>Stepper motor:</h3>
+<p>The motor I could buy was a Copal SPG20-332. It's not a bipolar motor but it may be OK to use as an bipolar. The unipolar motor has a middle point of each coils but just ignoring this connection, it can be used as a bipolar motor.</p>
+<h3>Signals:</h3>
+<p>In figure above, the signalA and the signalB are necessary for the motor operation. Other 2 signals (Power control output and Position sensor input) are option. The power control is a signal to the TA7774PG that controls the POWER-OFF(Low) and OPERATION(High) on Vs2_b pin (pin8). The Vs2_b pin has a pull up resister because this signal is an option. The pull-up resister ensures that the pin has High state if it is not connected any control output. The power control can be enabed by <em>set_power_ctrl( true )</em>. It makes power control signal low (POWER-OFF) when no motor turn required.</p>
+<p>An option input is available called position_detect (position sensor input). This can be used for the sensor (output of a photointerruptor, etc.) input to detect home position of the motor. User can set the edge of rise or fall for the detection. When the <em>find_home_position( StepperMotor::RISING_EDGE | </em><em style="font-weight: bold;">StepperMotor::FALLING_EDGE</em><em> )</em> called, it starts to turn the motor (1 rotation). And then when the defined signal edge detected, the motor is stopped and the home position will be set to current position.</p>
+<h1>Note:</h1>
+<h3>Multiple motor operation:</h3>
+<p>Multiple motors can be used. The analog clock applicaition shows a sample of 3 hands (hour, minute and second) clock driven stepper motors.</p>
+<pre>StepperMotor    m_s( p21, p22, p23, p30 );  //  motor for second
+StepperMotor    m_m( p24, p25, p26, p30 );  //  motor for minute
+StepperMotor    m_h( p27, p28, p29, p30 );  //  motor for hour</pre>
+<p>Since the position_detect (position sensor input) is an input, it can be shared by multiple sensors [<strong>THIS IS NOT TESTED, SORRY</strong>]. But if the sensor shared configuration taken, the <em style="font-weight: bold;">find_home_position() </em>should be done one after the other (or sensor sharing declaration may be good if you don't use the sensors).</p>
+<h3>Operation modes:</h3>
+<p>There are several modes and settings for operation. The functions of <span style="white-space: nowrap;"><em>set_sync_mode()</em> and </span><em><span style="white-space: nowrap;">set_rot_mode() </span></em>are for SYNC, ROTATE mode setting. With <em>set_pps()</em> function, the motor speed can be controlled.</p>
+<p><em>set_sync_mode( StepperMotor::SYNCHRONOUS | StepperMotor::ASYNCHRONOUS )</em> sets the motor operation synchronised to the program execution or not. Three function makes the motor to turn to specified position (target position): <em>go_angle()</em>, <em>go_position()</em> and <em>move_steps()</em>. If the <strong>SYNCHRONOUS</strong> is set, the program execution will be kept waiting inside of those functions until motor rotation complete.If <strong>ASYNCHRONOUS</strong> is set (default), the function will return immediately and program can work for something else.</p>
+<p>set_rot_mode( <em style="font-weight: bold;">StepperMotor::SHORTEST | </em><em style="font-weight: bold;">StepperMotor::NO_WRAPAROUND | </em><em style="font-weight: bold;">StepperMotor::CLOCKWISE_ONLY | </em><em style="font-weight: bold;">StepperMotor::</em><em style="font-weight: bold;"><span style="font-style: normal; font-weight: normal;"><em style="font-weight: bold;"> COUNTER_CLOCKWISE_ONLY</em></span> </em>) defines rotate direction when the motor works. If it is in <strong>SHORTEST</strong> mode (default), motor will turn the way shortest to target position. <strong>NO_WAPAROUND</strong> is to avoid the motor don't turn across the home position. <strong>CLOCKWISE_ONLY</strong> and <strong>COUNTER_CLOCKWISE_ONLY</strong> are to make one directional turn.</p>
+<p> </p>
+<p><em> </em></p>
+<p> </p>
+<p><em> </em></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p><span style="font-family: monospace; font-size: 12px; white-space: pre;"> </span></p>
+<p> </p>
+<p> </p>
+<hr>
+<hr>
+<p><a name="japanese"></a></p>
+<h1>これはなに？</h1>
+<p>ステッピングモータ駆動用のクラスライブラリとそのサンプルです．</p>
+<p>mbedはステッピングモータを直接ドライブするのではなく，ドライバチップを駆動します．というのもmbedはモータ駆動に充分な電流容量がなく，直接接続することができないためです．</p>
+<p class="p1">ステッピング・モータは<span class="s1">2</span>本の信号線に適切な位相関係を持ったパスル列で駆動します．このライブラリは<span class="s1">mbed</span>にこの信号を発生させます．</p>
+<p> </p>
+<p class="p1">次の図はステッピングモータの動作を単純化したものです．コイルに流れる電流を切り替えてやるたびに回転子が動きます．<span class="s1">mbed</span>はこの信号の極性とタイミングを作ります．</p>
+<p class="p1">この図のモータは<span class="s1">1</span>回転中に取り得る位置は<span class="s1">4</span>つしかありませんが，実際のモータではもっと多い位置が設けられています．</p>
+<h1>コード：</h1>
+<div>
+<p class="p1">コードはライブラリとして用意されています．</p>
+<p class="p1">またサンプルコードも用意されています．</p>
+<p class="p1"><span class="s2">1</span>個のモータを駆動する単純な例</p>
+<p class="p1"><span class="s2">3</span>個のステッピングモータを同時に駆動するやや複雑な例</p>
+</div>
+<p> </p>
+<p class="p1">アナログ時計のコードは<span class="s1">2010</span>年<span class="s1">11</span>月<span class="s1">20</span>日，<span class="s2">21</span>日に東京工業大学で開催された<span class="s1">Make: Tokyo Meeting </span><span class="s2">06</span>でデモされたものです．</p>
+<p class="p1">このデモでは<span class="s1">3</span>個のステッピングモータ制御とネットワークを介した<span class="s1">NTP</span>アクセスをデモしました．<span class="s1">NTP</span>サーバへのアクセスコードは次の<span class="s1">URL</span>のものから拝借しました．</p>
+<h1>ハードウェア：</h1>
+<div>
+<p class="p1">電源</p>
+<p class="p1">ハードウェアを単純化するため<span class="s1">USB</span>バス電源を用いる単一電源としています<span class="s1">(</span>モータ回路へは<span class="s1">mbed</span>の<span class="s1">VU</span>出力から供給<span class="s1">)</span>．</p>
+<p class="p1"><span class="s1">USB</span>バス電源はルートハブ<span class="s1">(PC</span>のコネクタ<span class="s1">)</span>またはセルフパワーを用いなければなりません．バスパワー・ハブからの電源は容量が小さいので問題となります．</p>
+<p class="p3">(<span class="s3">セルフパワー・ハブ</span> &gt;<span class="s4">500</span>mA/port<span class="s3">，バスパワー・ハブ</span> = <span class="s4">100</span>mA/port)</p>
+<p class="p1">もしモータに充分なトルクがなようであれば，より高い電圧の使用も可能です．<span class="s1">TA7774PG</span>のモーター電源ピン<span class="s1">(pin9</span>と<span class="s1">16)</span>．</p>
+<p class="p1">ステッピングモータ：</p>
+<p class="p1">私が入手できたステッピングモータはコパル電子製の<span class="s1">SPG20-</span><span class="s2">332</span>でした<span class="s1">(</span>秋月電子で購入<span class="s1">)</span>．このモータはバイポーラ型ではないのですが，接続によりバイポーラとして使うことが可能です<span class="s1">(</span>多分問題ないはずです<span class="s1">)</span></p>
+<p class="p1">ユニポーラ型では各コイルの中点が端子に出ているのですが，これを無視して使うことでバイポーラ型として扱います．</p>
+<p class="p1">信号：</p>
+<p class="p1">上の図中，<span class="s1">SinalA</span>と<span class="s1">SignalB</span>はモータの動作に不可欠な信号です．他の<span class="s1">2</span>本の信号<span class="s1">(Power</span>制御出力と位置センサー入力<span class="s1">)</span>はオプションです．</p>
+<p class="p3">Power<span class="s3">制御は</span>TA7774PG<span class="s3">の</span>Vs2_b<span class="s3">ピン</span>(pin8)<span class="s3">に与え</span>POWER-OFF(Low)<span class="s3">と</span>OPERAITION(High)<span class="s3">を切り替えるための信号です．</span></p>
+<p class="p1">この<span class="s1">Vs2_b</span>ピンはにはプルアップ抵抗がつけられていますがこれはこの信号がオプションであるためです．この信号を使わない場合，非接続とした場合にもこのピンが<span class="s1">High</span>になるようにしています．</p>
+<p class="p1"><span class="s1">Power</span>制御は<span class="s1">set_power_ctrl( true )</span>によってイネーブルされます．これがイネーブルされている間，モータが動作しない状態であるときに<span class="s1">TA7774PG</span>が<span class="s1">POWER-OFF</span>状態になるようにします．</p>
+<p class="p1">もうひとつの入力信号：位置検出入力<span class="s1">(</span>位置センサー入力<span class="s1">)</span>もオプションです．モータのホーム・ポジション検出のために使われるフォトインタラプタなどの出力を接続できます．</p>
+<p class="p1">検出をどちらのエッジ<span class="s1">(</span>立ち上がりまたは立ち下がり<span class="s1">)</span>で検出するのかを選択可能です．<span class="s1">find_home_position( edge )</span></p>
+</div>
